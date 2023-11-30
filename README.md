@@ -1,2 +1,3 @@
-# fahb
-Feasibility assessment using hierarchical Bayesian models in pilot trials
+# fahb - feasibility assessment using hierarchical Bayesian models in pilot trials
+
+This project will consider if, and how, we can use observed recruitment rates in pilot trials to assess the feasibility of a planned definitive study. In particular, we will examine the implications of the number of recruiting centres in the pilot trial under a hierarchical model allowing for random variation in centre recruitment rates.
