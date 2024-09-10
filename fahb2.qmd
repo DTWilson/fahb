@@ -1,0 +1,402 @@
+---
+title: "fahb"
+format: html
+---
+
+## Introduction
+
+Can pilot trial recruitment data be used to reliably make progression decisions? One potential limitation is that a pilot trial will typically have few centres. If our recruitment model (that is, the model we intend to use for the main trial and are using the pilot to inform) is hierarchical, we might expect the number of centres to impose an upper limit on the precision of our recruitment predictions (since in the best case we will learn the exact recruitment rate of each centre, leading to only a few data points for inference on the level 2 component of the distribution).
+
+## Review
+
+TODO - review the relevant literature on hierarchical recruitment models and Bayesian progression criteria.
+
+## Motivation
+
+TODO - need a specific example to get the numbers from, something from Cancer if possible. If not, PROSPER?
+
+### Precision
+
+Before thinking about PC / testing, we can first illustrate the general point above - that with few centres, we will have low precision in the overall estimate. We can do this in a simple simulation study.
+
+```{r}
+library(reshape2)
+library(lme4)
+library(MASS)
+
+# Number of pilot sites
+m_p <- 8
+# Number recruited in pilot
+n_p <- 100
+
+ln_pars <- function(m, s) {
+  # Log-normal parameters which will give a distribution with mean m and sd s
+  mu <- (4*log(m) - log(s^2 + m^2))/2
+  sig <- sqrt(2*(log(m) - mu))
+  
+  return(c(mu, sig))
+  
+  # check
+  #exp(mu + sig^2/2); sqrt( (exp(sig^2) - 1)*exp(2*mu + sig^2) )
+}
+
+sim_rec_PG <- function(m_p, n_p, mu, sig) {
+  # Simulate a single pilot trial and output the estimated overall
+  # recruitment rate
+  
+  # Simulate true recruitment rates from a lognormal dist
+  lambdas <- exp(rnorm(m_p, mu, sig))
+  
+  # Simulate times between arrivals at each pilot site
+  t <- matrix(rexp(m_p*n_p, rate = lambdas), ncol = m_p, byrow = T)
+  # Transform to arrival times
+  t2 <- apply(t, 2, cumsum)
+  # Merged arrival times
+  t3 <- melt(t2)[,2:3]
+  # Cap after n_p total arrivals
+  t3 <- t3[order(t3$value),][1:n_p,]
+  # Counts by centre
+  ns <- as.numeric(table(t3$Var2))
+  # Include 0 counts for sites if applicable
+  ns <- c(ns, rep(0,m_p - length(ns)))
+  
+  # Recruitment time
+  time <- t3[nrow(t3), 2]
+  
+  df <- data.frame(y = ns,
+                   c = 1:m_p)
+  
+  #fit <- glmer(y ~ (1 | c), family = poisson, data = df)
+  
+  #est <- as.numeric(fixef(fit))
+  
+  fit_nb <- glm.nb(y ~ 1, data = df)
+  
+  est <- as.numeric(coefficients(fit_nb))
+  
+  return(exp(est)/time)
+  #return(list(data = df, lambdas = lambdas, time = time))
+}
+
+N <- 1000
+
+# matching moments of gamma with sh = 3
+pars <- ln_pars(m = 35, s = 25)
+mu <- pars[1]; sig <- pars[2]
+# Simulate N estimates of overall recruitment rate
+ests_0 <- replicate(N, sim_rec_PG(m_p=4, n_p=120, mu, sig))
+hist(ests_0); mean(ests_0); sd(ests_0)
+
+pars <- ln_pars(m = 50, s = 25)
+mu <- pars[1]; sig <- pars[2]
+ests_1 <- replicate(N, sim_rec_PG(m_p=4, n_p=120, mu, sig))
+hist(ests_1); mean(ests_1); sd(ests_1)
+
+cs <- seq(min(c(ests_0, ests_1)), max(c(ests_0, ests_1)), length.out = 100)
+
+plot(sapply(cs, function(x) mean(ests_0 > x)), sapply(cs, function(x) mean(ests_1 < x)))
+```
+
+### Standard progression criteria
+
+Pilot trials typically specify progression criteria in the form of thresholds for the overall recruitment rate in the pilot. To help motivate this work we can illustrate the problem by showing what the sampling distribution of this statistic will look like under some specific hypotheses, and see if we are likely to have sufficient precision to make reliable progression decisions.
+
+We will use the Gamma distribution at level 2 here, since it is more tractable than the log-normal. In particular, the overall recruitment rate in the pilot is the sum of the centre rates, and if these are iid Gamma then the sum is also Gamma with the same scale parameter and the sum of the shape parameters. The number recruited in the pilot then follows a negative binomial distribution, so from this we can get the sampling distribution of the estimated overall rate (via Monte Carlo).
+ 
+```{r}
+library(ggplot2)
+# Number of pilot sites
+m_p <- 4
+
+# shape multiplier - a nuisance parameter
+sh <- 3
+
+# Null hypothesis
+m_0 <- 35
+alpha_0 <- sh
+beta_0 <- alpha_0/m_0
+
+# Alternative hypothesis
+m_1 <- 50
+alpha_1 <- sh
+beta_1 <- alpha_1/m_1
+
+# Look over a range of true recruitment rates
+lambda <- seq(0, 200, 0.1)
+d <- c(dgamma(lambda, alpha_0, beta_0), dgamma(lambda, alpha_1, beta_1))
+df <- data.frame(lambda = rep(lambda, 2),
+                 d = d,
+                 h = rep(c("Null", "Alt"), each = length(lambda)))
+
+# Plot the null and alternative densities of the site rates
+ggplot(df, aes(x = lambda, y = d, colour = h)) + geom_line() +
+  theme_minimal()
+
+# From these level 2 Gamma distributions we can derive the null and alternatives 
+# sampling distributions, and find the power of a test calibrated to give a 
+# type I error rate of 0.05
+c <- qnbinom(0.95, m_p*alpha_0, beta_0/(1+beta_0))
+1 - pnbinom(c, m_p*alpha_1, beta_1/(1+beta_1))
+```
+
+Could try to set things up in this way as hypothesis tests. But there are several problems:
+
+- As illustrated by the code above, the nuisance parameter $\alpha$ has a large effect on power, but is not known at the design stage. It would have to be estimated, and the sampling error of that estimation accounted for in our test.
+- We don't just want to learn about the average rate, but also the rates at the pilot centres specifically since we'll use those in the main trial.
+- The small sample size (i.e. number of pilot centres) will make it difficult to estimate $\alpha$ (or any alternative measure of between-centre variability).
+- The DGM above will not match reality, where we will stop recruiting at all centres once the pilot sample size has been achieved.
+
+The first two problems can be addressed by analysing the pilot data using a multilevel model, which will then estimate all parameters (including the level 2 variance) of the population distribution, and will also gives us estimates of the specific pilot centre rates.
+
+The second two problems can be addressed through a Bayesian approach, which can handle small sample better and where we don't have to worry about the specifics of the DGM beyond the likelihood.
+
+## Bayesian approach
+
+First, write a simulation of the pilot trial which includes simulation of all site rates and outputs both the data (i.e. number recruited at each p8ilot site, recruitment time) and some low dimension summary stats which we can use in the Bayesian sample size method.
+
+```{r}
+library(brms)
+library(reshape2)
+library(posterior)
+library(ggplot2)
+
+
+ln_pars <- function(m, s) {
+  # Log-normal parameters which will give a distribution with mean m and sd s
+  mu <- (4*log(m) - log(s^2 + m^2))/2
+  sig <- sqrt(2*(log(m) - mu))
+  
+  return(c(mu, sig))
+  
+  # check
+  #exp(mu + sig^2/2); sqrt( (exp(sig^2) - 1)*exp(2*mu + sig^2) )
+}
+
+m <- 30     # number of main trial sites
+m_p <- 4    # number of pilot sites
+n_p <- 200  # number of pilot participants
+
+# null, matching moments of gamma with sh = 3
+pars <- ln_pars(m = 35, s = 20)
+
+# alternative
+pars <- ln_pars(m = 50, s = 29)
+
+mu <- pars[1]; sig <- pars[2]
+
+# Prior dist on overall lambda, conditional on mu and sig
+lambda_prior <- replicate(10^4, sum(exp(rnorm(m, mu, sig))))
+hist(lambda_prior)
+
+sim_rec <- function(m, m_p, n_p, mu, sig) {
+  # Simulate recruitment rates for all sites and recruitment at pilot sites
+  
+  # Simulate true recruitment rates at all main trial sites (lognormal)
+  lambdas <- exp(rnorm(m, mu, sig))
+  
+  # Simulate times between arrivals at each pilot site
+  t <- matrix(rexp(m_p*n_p, rate = lambdas[1:m_p]), ncol = m_p, byrow = T)
+  # Transform to arrival times
+  t2 <- apply(t, 2, cumsum)
+  # Merged arrival times
+  t3 <- melt(t2)[,2:3]
+  # Cap after n_p total arrivals
+  t3 <- t3[order(t3$value),][1:n_p,]
+  # Counts by centre
+  ns <- as.numeric(table(t3$Var2))
+  ns <- c(ns, rep(0,m_p - length(ns)))
+  
+  # Recruitment time
+  time <- t3[nrow(t3), 2]
+  
+  df <- data.frame(y = ns,
+                   c = 1:m_p)
+  
+  return(list(data = df, lambdas = lambdas, time = time, 
+              stats = c(log(mean(ns/time)), log(sd(ns/time)))))
+}
+
+sim_rec2 <- function(m, m_p, n_p, mu, sig) {
+  # As above but now, instead of stopping when n_p have been recruited into the
+  # pilot, stop at a fixed time (corresponding to then we'd expect all n_p to
+  # be recruited, given out prior)
+  stop_time <- n_p/(m_p*exp(mu + sig^2/2))
+  
+  # True recruitment rates
+  lambdas <- exp(rnorm(m, mu, sig))
+  
+  # Wait times at each pilot site
+  t <- matrix(rexp(m_p*n_p, rate = lambdas[1:m_p]), ncol = m_p, byrow = T)
+  # Transform to arrival times
+  t2 <- apply(t, 2, cumsum)
+  # Merged arrival times
+  t3 <- melt(t2)[,2:3]
+  t3 <- t3[order(t3$value),]
+  # Cap at stop time
+  t3 <- t3[t3$value <= stop_time,]
+  # Counts by centre
+  ns <- as.numeric(table(t3$Var2))
+  ns <- c(ns, rep(0,m_p - length(ns)))
+  
+  # Recruitment time
+  time <- t3[nrow(t3), 2]
+  
+  df <- data.frame(y = ns,
+                   c = 1:m_p)
+  
+  return(list(data = df, lambdas = lambdas, time = time, 
+              stats = c(log(mean(ns/time)), log(sd(ns/time)))))
+}
+
+pilot_sim <- sim_rec2(m, m_p, n_p, mu, sig)
+```
+
+For a single simulation, can fit a Bayesian multilevel Poisson model:
+
+```{r}
+#fit0 <- glmer(y ~ 1 + (1 | c), data = pilot_sim$data, family = poisson())
+
+bprior <- c(prior(normal(2,5), class = "Intercept"),
+            prior(student_t(10, 0, 0.6), class = "sd"))
+
+fit  <- brm(y ~ 1 + (1 | c), data = pilot_sim$data, family = poisson(),
+            prior = bprior, silent = 2)
+
+summary(fit, priors = TRUE)
+```
+
+
+Now, run a small simulation which takes combinations of different `n_p` and `mp` and simulates pilot recruitment, fits the Bayesian model, extracts the posterior random effects for pilot sites and posterior predictive random effects for non-pilot sites, and combines these to get a posterior for the overall recruitment rate in the main trial. Output summary stats of this lambda posterior, including the credible interval quantiles.
+
+```{r}
+m <- 30
+n_ps <- c(80, 120, 200)
+m_ps <- c(4, 8, 12, 16, 20, 24)
+rs <- NULL
+for(n_p in n_ps){
+  
+  for(m_p in m_ps){
+    print(m_p)
+    
+    for(j in 1:200){
+  
+    pilot_sim <- sim_rec2(m, m_p, n_p, mu, sig)
+    output <- capture.output(fit <- suppressWarnings(update(fit, newdata = pilot_sim$data, silent = 2)))
+    
+    s <- as_draws(fit)
+    beta_0 <- extract_variable(s, "b_Intercept")
+    sd_r <- extract_variable(s, "sd_c__Intercept")
+    
+    # Get posterior predicted random effects for the non-pilot sites
+    us <- sapply(1:(m-m_p), function(x) exp(rnorm(length(beta_0), beta_0, sd_r)))
+    
+    r <- ranef(fit, summary = F)
+    us <- cbind(us, exp(r$c[,1:m_p,1] + beta_0))
+    
+    lambda <- rowSums(us)/pilot_sim$time
+    mean(lambda > 1250)
+    
+    r <- c(m_p, n_p, sum(pilot_sim$data$y),
+           sum(pilot_sim$lambdas),
+           mean(lambda),
+           sd(lambda),
+           as.numeric(quantile(lambda, probs = c(0.05, 0.95))))
+    
+    rs <- rbind(rs, r)
+    }
+  }
+}
+results <- as.data.frame(rs)
+names(results) <- c("m_p", "n_p", "true_n_p", "true", "est", "sd", "l_cr", "u_cr")
+
+#saveRDS(results, "results.rds")
+```
+
+Plot the width of the credible intervals over the numbers of pilot sites, target pilot participants, and actual pilot participants (given the fixed recruitment time).
+
+```{r}
+results <- readRDS("results.rds")
+
+results$rel_cr <- (results$u_cr - results$l_cr)/results$true
+
+ggplot(results, aes(x = m_p, group = m_p)) +
+  geom_boxplot(aes(y=u_cr - l_cr)) +
+  ylim(c(0, 4000))
+
+ggplot(results, aes(x = n_p, group = n_p)) +
+  geom_boxplot(aes(y=u_cr - l_cr)) +
+  ylim(c(0, 4000))
+
+ggplot(results, aes(x = true_n_p, colour = m_p)) +
+  geom_point(aes(y=u_cr - l_cr)) +
+  ylim(c(0, 4000))
+```
+
+We see clear indications that the number of sites is a far greater determinant of precision that the number of participants.
+
+## Sample size
+
+
+```{r}
+library(mgcv)
+library(extraDistr)
+library(ggplot2)
+
+cond_exp_pow <- function(lam) {
+  n <- 1:10000
+  pow <- 1 - pnorm(qnorm(0.975) - 0.15/sqrt(2/n))
+  pr <- 2*dpois(2*n, lam)
+  return(sum(pow*pr))
+}
+
+m <- 30
+n_ps <- c(80, 110, 140, 170, 200)
+m_ps <- c(8, 12, 16, 20, 24)
+rs <- NULL
+for(n_p in n_ps){
+  
+  for(m_p in m_ps){
+    print(m_p)
+
+    df <- data.frame()
+    for(i in 1:10^4){
+      # Matching the weakly informative analysis priors
+      mu <- rnorm(1, 2, 5)
+      sig <- rht(1, nu = 10, sigma = 0.6)
+      
+      # A more informative design prior
+      mu <- rnorm(1, 3.3, 0.5)
+      sig <- rgamma(1, shape = 3, rate = 6)
+      
+      pilot_sim <- sim_rec2(m, m_p, n_p, mu, sig)
+      r <- c(cond_exp_pow(sum(pilot_sim$lambdas)), pilot_sim$stats, sum(pilot_sim$lambdas))
+      df <- rbind(df, r)
+    }
+    names(df) <- c("u", "m", "sd", "l")
+    
+    fit <- gam(u ~ ti(m) + ti(sd) + ti(m, sd), data = df)
+    
+    r <- data.frame(u = df$u,
+                    p_u = predict(fit, newdata = df[,2:3]))
+    
+    r$go <- r$p_u > 0.7
+    
+    fit2 <- gam(go ~ s(u), data = r, family = binomial())
+    
+    df3 <- data.frame(u = r$u, pow = predict(fit2, type = "response"))
+    df3 <- df3[order(df3$pow),]
+    rs <- rbind(rs, c(n_p, m_p, df3[df3$pow >= 0.1,"u"][1], df3[df3$pow >= 0.9,"u"][1]))
+  }
+}
+
+df <- as.data.frame(rs)
+
+ggplot(df, aes(V2, colour = as.factor(V1))) + geom_point(aes(y= V3)) +
+  geom_point(aes(y=V4))
+
+ggplot(df, aes(V1, colour = as.factor(V2))) + geom_point(aes(y= V3)) +
+  geom_point(aes(y=V4))
+```
+
+
+
