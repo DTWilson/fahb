@@ -3,6 +3,8 @@ title: "fahb"
 format: html
 ---
 
+# Application
+
 ## Introduction
 
 Can pilot trial recruitment data be used to reliably make progression decisions? One potential limitation is that a pilot trial will typically have few centres. If our recruitment model (that is, the model we intend to use for the main trial and are using the pilot to inform) is hierarchical, we might expect the number of centres to impose an upper limit on the precision of our recruitment predictions (since in the best case we will learn the exact recruitment rate of each centre, leading to only a few data points for inference on the level 2 component of the distribution).
@@ -15,15 +17,23 @@ TODO - review the relevant literature on hierarchical recruitment models and Bay
 
 TODO - need a specific example to get the numbers from, something from Cancer if possible. If not, PROSPER?
 
-### Precision
+### Sampling distributions
 
-Before thinking about PC / testing, we can first illustrate the general point above - that with few centres, we will have low precision in the overall estimate. We can do this in a simple simulation study.
+We can first illustrate the general point above - that with few centres, we will have low precision in the overall estimate. We can do this by simulating the pilot under a null and alternative hypothesis, recording the estimated per-site recruitment rate each time, and then plotting the estimated densities. We can also use a progression criteria threshold and highlight the corresponding type I and II error rates.
 
 ```{r}
+library(reshape2)
+library(ggplot2)
+library(brms)
+library(posterior)
+library(qgam)
+
+cols <- c("#ffba49", "#20a39e", "#ef5b5b", "#23001e", "#a4a9ad")
+
 # Number of pilot sites
-m_p <- 8
+m_p <- 4
 # Number recruited in pilot
-n_p <- 100
+n_p <- 80
 
 ln_pars <- function(m, s) {
   # Log-normal parameters which will give a distribution with mean m and sd s
@@ -36,13 +46,13 @@ ln_pars <- function(m, s) {
   #exp(mu + sig^2/2); sqrt( (exp(sig^2) - 1)*exp(2*mu + sig^2) )
 }
 
-sim_rec_PG <- function(m_p, n_p, mu, sig) {
+sim_rec0 <- function(m, m_p, n_p, mu, sig) {
   
   # True recruitment rates
-  lambdas <- exp(rnorm(m_p, mu, sig))
+  lambdas <- exp(rnorm(m, mu, sig))
   
-  # Wait times at each pilot site
-  t <- matrix(rexp(m_p*n_p, rate = lambdas), ncol = m_p, byrow = T)
+  # Simulate times between arrivals at each pilot site
+  t <- matrix(rexp(m_p*n_p, rate = lambdas[1:m_p]), ncol = m_p, byrow = T)
   # Transform to arrival times
   t2 <- apply(t, 2, cumsum)
   # Merged arrival times
@@ -59,191 +69,579 @@ sim_rec_PG <- function(m_p, n_p, mu, sig) {
   df <- data.frame(y = ns,
                    c = 1:m_p)
   
-  #fit <- glmer(y ~ (1 | c), family = poisson, data = df)
-  
-  #est <- as.numeric(fixef(fit))
-  
-  fit_nb <- glm.nb(y ~ 1, data = df)
-  
-  est <- as.numeric(coefficients(fit_nb))
-  
-  return(exp(est)/time)
-  #return(list(data = df, lambdas = lambdas, time = time))
+  return(list(data = df, lambdas = lambdas, time = time, 
+              stats = c(mean(ns/time), sd(ns/time))))
 }
 
-N <- 1000
+sim_rec <- function(m, m_p, n_p, mu, sig) {
+  # True recruitment rates
+  lambdas <- exp(rnorm(m, mu, sig))
+  
+  # Pilot overall recruitment rate
+  lambda_p <- sum(lambdas[1:m_p])
+  
+  # Recruitment time
+  time <- rgamma(1, n_p, lambda_p)
+  
+  # Site distribution
+  ns <- rmultinom(1, n_p, lambdas[1:m_p]/lambda_p)
+  
+  df <- data.frame(y = ns,
+                   c = 1:m_p)
+  
+  return(list(data = df, lambdas = lambdas, time = time, 
+              stats = c(mean(ns/time), sd(ns/time))))
+}
+
+N <- 10^4
 
 # matching moments of gamma with sh = 3
 pars <- ln_pars(m = 35, s = 25)
 mu <- pars[1]; sig <- pars[2]
-ests_0 <- replicate(N, sim_rec_PG(m_p=4, n_p=120, mu, sig))
-hist(ests_0); mean(ests_0); sd(ests_0)
+ests_0 <- replicate(N, sim_rec(m=30, m_p=4, n_p=80, mu, sig)$stats[1])
 
 pars <- ln_pars(m = 50, s = 25)
 mu <- pars[1]; sig <- pars[2]
-ests_1 <- replicate(N, sim_rec_PG(m_p=4, n_p=120, mu, sig))
-hist(ests_1); mean(ests_1); sd(ests_1)
+ests_1 <- replicate(N, sim_rec(m=30, m_p=4, n_p=80, mu, sig)$stats[1])
+```
 
+Now, plot these sampling distributions with an example progression criteria, highlighting the probability of type I and II errors:
+
+```{r}
+df <- data.frame(ests = c(ests_0, ests_1),
+                 h = factor(rep(c("Null", "Alt."), each = length(ests_0))))
+
+pc <- 45
+
+p <- ggplot(df, aes(x=ests)) + geom_density(aes(group = h, colour = h)) +
+  scale_colour_manual("Hypothesis", breaks=c("Null", "Alt."),
+                      values=cols[1:2]) +
+  xlab("Estimated recruitment rate") +
+  ylab("Density") +
+  theme_minimal()
+   
+# Extract plotted data as a date frame, including x, y, and group
+dpb <- ggplot_build(p)$data[[1]]
+
+# Get limits of type I and II error area
+x1_tI <- min(which(dpb[dpb$group == 2, "x"] >= pc))
+x2_tI <- max(which(dpb[dpb$group == 2, "x"] >= pc))
+
+x1_tII <- min(which(dpb[dpb$group == 1, "x"] <= pc))
+x2_tII <- max(which(dpb[dpb$group == 1, "x"] <= pc))
+
+# Add shaded areas
+p + geom_area(data=data.frame(x=dpb[dpb$group == 2, "x"][x1_tI:x2_tI],
+                       y=dpb[dpb$group == 2, "y"][x1_tI:x2_tI]),
+            aes(x=x, y=y), fill=cols[1], alpha = 0.3) +
+  geom_area(data=data.frame(x=dpb[dpb$group == 1, "x"][x1_tII:x2_tII],
+                       y=dpb[dpb$group == 1, "y"][x1_tII:x2_tII]),
+            aes(x=x, y=y), fill=cols[2], alpha = 0.3) +
+  geom_vline(xintercept = pc, linetype = 2)
+
+# Print the estimated error rates
+tI_ex <- mean(df[df$h == "Null", 1] >= pc)
+tII_ex <-mean(df[df$h == "Alt.", 1] <= pc)
+c(tI_ex, tII_ex)
+```
+
+We can get a more general picture of efficiency by plotting the error rates from a range of progression thresholds.
+
+```{r}
 cs <- seq(min(c(ests_0, ests_1)), max(c(ests_0, ests_1)), length.out = 100)
 
-plot(sapply(cs, function(x) mean(ests_0 > x)), sapply(cs, function(x) mean(ests_1 < x)))
-```
+df2 <- data.frame(tI = sapply(cs, function(x) mean(ests_0 >= x)),
+                  tII = sapply(cs, function(x) mean(ests_1 <= x)))
 
-### Standard progression criteria
-
-Pilot trials typically specify progression criteria in the form of thresholds for the overall recruitment rate in the pilot. To help motivate this work we can illustrate the problem by showing what the sampling distribution of this statistic will look like under some specific hypotheses, and see if we are likely to have sufficient precision to make reliable progression decisions.
-
-We will use the Gamma distribution at level 2 here, since it is more tractable than the log-normal. In particular, the overall recruitment rate in the pilot is the sum of the centre rates, and if these are iid Gamma then the sum is also Gamma with the same scale parameter and the sum of the shape parameters. The number recruited in the pilot then follows a negative binomial distribution, so from this we can get the sampling distribution of the estimated overall rate (via Monte Carlo).
-
-
- 
-```{r}
-library(ggplot2)
-# Number of pilot sites
-m_p <- 8
-
-# shape multiplier - a nuisance parameter
-sh <- 3
-
-# Null hypothesis
-m_0 <- 35
-alpha_0 <- sh
-beta_0 <- alpha_0/m_0
-
-# Alternative hypothesis
-m_1 <- 50
-alpha_1 <- sh
-beta_1 <- alpha_1/m_1
-
-lambda <- seq(0, 200, 0.1)
-d <- c(dgamma(lambda, alpha_0, beta_0), dgamma(lambda, alpha_1, beta_1))
-df <- data.frame(lambda = rep(lambda, 2),
-                 d = d,
-                 h = rep(c("Null", "Alt"), each = length(lambda)))
-
-# Plot the null and alternative densities of the site rates
-ggplot(df, aes(x = lambda, y = d, colour = h)) + geom_line() +
+ggplot(df2, aes(tI, tII)) + geom_line() +
+  coord_fixed() +
+  xlab("Type I error rate") +
+  ylab("Type II error rate") +
+  geom_point(data=data.frame(tI = tI_ex, tII = tII_ex)) +
   theme_minimal()
-
-# From these level 2 Gamma distributions we can derive the null and alternatives 
-# sampling distributions, and find the power of a test calibrated to give a 
-# type I error rate of 0.05
-c <- qnbinom(0.95, m_p*alpha_0, beta_0/(1+beta_0))
-1 - pnbinom(c, m_p*alpha_1, beta_1/(1+beta_1))
 ```
 
-Could try to set things up in this way as hypothesis tests. But there are several problems:
+So, we see that in this example at least (where the null was a mean of 35, the alternative 50, with a given amount of variation, and sample sizes $m_p = 4$ and $n_p = 80$) we don't have great error rates and may want to increase the sample size.
 
-- As illustrated by the code above, the nuisance parameter $\alpha$ has a large effect on power, but is not known at the design stage. It would have to be estimated, and the sampling error of that estimation accounted for in our test.
-- We don't just want to learn about the average rate, but also the rates at the pilot centres specifically since we'll use those in the main trial.
-- The small sample size (i.e. number of pilot centres) will make it difficult to estimate $\alpha$ (or any alternative measure of between-centre variability).
-- The DGM above will not match reality, where we will stop recruiting at all centres once the pilot sample size has been achieved.
+We could proceed under this frequentist hypothesis testing framework, using error rates to calibrate the design. But there are some problems.
 
-The first two problems can be addressed by analysing the pilot data using a multilevel model, which will then estimate all parameters (including the level 2 variance) of the population distribution, and will also gives us estimates of the specific pilot centre rates.
+- We have defined our hypotheses as points in the 2D space of the lognormal parameters. Really, we want to define them as regions (e.g. with a fixed expectation but over the range of variability), which makes everything very complicated (e.g. we need to maximise error rates over these regions, either through closed results or numerically).
+- In the above we base decisions on the average rate, estimated from the pilot sample of sites. But these sites will be used in the main trial, so we want to estimate the specific rates there too.
 
-The second two problems can be addressed through a Bayesian approach, which can handle small sample better and where we don't have to worry about the specifics of the DGM beyond the likelihood.
+A natural way to deal with these issues is to adopt a Bayesian framework and fit a hierarchical model. This will also help if we have a low sample size (at either level), and if we have historical information.
 
-## Iluustration
+### Bayesian analysis
+
+To illustrate the Bayesian approach we can simulate some data (we use the same parameters as for the null distribution above) and fit the model, plotting the resulting posterior for the quantity we are really interested in: the expected time it will take to recruit to the main trial. 
+
+First we need an amended simulation which lets us use different sample sizes but in the same trial example.
 
 ```{r}
-library(brms)
-library(reshape2)
-library(posterior)
-library(ggplot2)
-
-
-ln_pars <- function(m, s) {
-  # Log-normal parameters which will give a distribution with mean m and sd s
-  mu <- (4*log(m) - log(s^2 + m^2))/2
-  sig <- sqrt(2*(log(m) - mu))
+sim_rec2 <- function(mu, sig) {
+  # Simulating one data set split into different sample size scenarios
+  m <- 30
+  m_p <- 24
   
-  return(c(mu, sig))
-  
-  # check
-  #exp(mu + sig^2/2); sqrt( (exp(sig^2) - 1)*exp(2*mu + sig^2) )
-}
-
-m <- 30
-m_p <- 8
-n_p <- 200
-
-# null, matching moments of gamma with sh = 3
-pars <- ln_pars(m = 35, s = 20)
-
-# alternative
-pars <- ln_pars(m = 50, s = 29)
-
-mu <- pars[1]; sig <- pars[2]
-
-# Prior dist on overall lambda, conditional on mu and sig
-lambda_prior <- replicate(10^4, sum(exp(rnorm(m, mu, sig))))
-hist(lambda_prior)
-
-sim_rec <- function(m, m_p, n_p, mu, sig) {
-  
-  # True recruitment rates
+  # Simulate true recruitment rates at all main trial sites (lognormal)
   lambdas <- exp(rnorm(m, mu, sig))
   
-  # Wait times at each pilot site
+  # Simulate times between arrivals at each pilot site
   t <- matrix(rexp(m_p*n_p, rate = lambdas[1:m_p]), ncol = m_p, byrow = T)
   # Transform to arrival times
   t2 <- apply(t, 2, cumsum)
   # Merged arrival times
   t3 <- melt(t2)[,2:3]
+  # Order by arrivals
+  t3 <- t3[order(t3$value),]
+  
+  # 1: m_p = 4, n_p = 80
+  t1 <- t3[t3$Var2 %in% 1:4,]
+  t1 <- t1[1:80,]
+  time1 <- t1[nrow(t1), 2]
+  ns1 <- as.numeric(table(t1$Var2))
+  ns1 <- c(ns1, rep(0,4 - length(ns1)))
+  df1 <- data.frame(y = ns1,
+                   c = 1:4)
+  
+  # 2: m_p = 4, n_p = 200
+  t2 <- t3[t3$Var2 %in% 1:4,]
+  t2 <- t2[1:200,]
+  time2 <- t2[nrow(t2), 2]
+  ns2 <- as.numeric(table(t2$Var2))
+  ns2 <- c(ns2, rep(0,4 - length(ns2)))
+  df2 <- data.frame(y = ns2,
+                   c = 1:4)
+  
+  # 3: m_p = 24, n_p = 200
+  t3 <- t3[t3$Var2 %in% 1:24,]
+  t3 <- t3[1:200,]
+  time3 <- t3[nrow(t3), 2]
+  ns3 <- as.numeric(table(t3$Var2))
+  ns3 <- c(ns3, rep(0,24 - length(ns3)))
+  df3 <- data.frame(y = ns3,
+                   c = 1:24)
+  
   # Cap after n_p total arrivals
   t3 <- t3[order(t3$value),][1:n_p,]
   # Counts by centre
   ns <- as.numeric(table(t3$Var2))
   ns <- c(ns, rep(0,m_p - length(ns)))
   
-  # Recruitment time
-  time <- t3[nrow(t3), 2]
-  
-  df <- data.frame(y = ns,
-                   c = 1:m_p)
-  
-  return(list(data = df, lambdas = lambdas, time = time, 
-              stats = c(log(mean(ns/time)), log(sd(ns/time)))))
+  return(list(lambdas = lambdas, 
+              data1 = df1, time1 = time1, 
+              data2 = df2, time2 = time2, 
+              data3 = df3, time3 = time3))
+
 }
 
-sim_rec2 <- function(m, m_p, n_p, mu, sig) {
-  # Instead of stopping at n_p, stop at a fixed time
-  stop_time <- n_p/(m_p*exp(mu + sig^2/2))
+pars <- ln_pars(m = 35, s = 25)
+mu <- pars[1]; sig <- pars[2]
+pilot_sim <- sim_rec2(mu, sig)
+```
+
+First initialise the model:
+
+```{r}
+bprior <- c(prior(normal(2,5), class = "Intercept"),
+            prior(student_t(10, 0, 0.6), class = "sd"))
+
+fit  <- brm(y ~ 1 + (1 | c), data = pilot_sim$data1, family = poisson(),
+            prior = bprior, silent = 2)
+
+summary(fit, priors = TRUE)
+```
+
+Now use the compiled model to get fits for the various sample size options:
+
+```{r}
+set.seed(7923)
+pilot_sim <- sim_rec2(mu, sig)
+samps <- NULL
+rs <- NULL
+
+m <- 30
+m_ps <- c(4, 4, 24)
+n_ps <- c(80, 200, 200)
+for(i in 1:3){
+  m_p <- m_ps[i]; n_p <- n_ps[i]
+  output <- capture.output(fit <- suppressWarnings(update(fit, newdata = pilot_sim[[i*2]], silent = 2)))
+      
+  s <- as_draws(fit)
+  beta_0 <- extract_variable(s, "b_Intercept")
+  sd_r <- extract_variable(s, "sd_c__Intercept")
   
-  # True recruitment rates
-  lambdas <- exp(rnorm(m, mu, sig))
+  # Get posterior predicted random effects for the non-pilot sites
+  us <- sapply(1:(m-m_p), function(x) exp(rnorm(length(beta_0), beta_0, sd_r)))
   
-  # Wait times at each pilot site
-  t <- matrix(rexp(m_p*n_p, rate = lambdas[1:m_p]), ncol = m_p, byrow = T)
-  # Transform to arrival times
-  t2 <- apply(t, 2, cumsum)
-  # Merged arrival times
-  t3 <- melt(t2)[,2:3]
-  t3 <- t3[order(t3$value),]
-  # Cap at stop time
-  t3 <- t3[t3$value <= stop_time,]
-  # Counts by centre
-  ns <- as.numeric(table(t3$Var2))
-  ns <- c(ns, rep(0,m_p - length(ns)))
+  r <- ranef(fit, summary = F)
+  us <- cbind(us, exp(r$c[,1:m_p,1] + beta_0))
   
-  # Recruitment time
-  time <- t3[nrow(t3), 2]
+  lambda <- rowSums(us)/pilot_sim[[i*2 + 1]]
   
-  df <- data.frame(y = ns,
-                   c = 1:m_p)
+  r <- c(m_p, n_p, sum(pilot_sim[[i*2]]$y),
+         sum(pilot_sim$lambdas),
+         mean(lambda),
+         sd(lambda),
+         as.numeric(quantile(lambda, probs = c(0.05, 0.95))))
   
-  return(list(data = df, lambdas = lambdas, time = time, 
-              stats = c(log(mean(ns/time)), log(sd(ns/time)))))
+  rs <- rbind(rs, r)
+  
+  samps <- cbind(samps, lambda)
 }
 
-pilot_sim <- sim_rec2(m, m_p, n_p, mu, sig)
+#saveRDS(rs, "ex_summary.rds")
+#saveRDS(samps, "ex_samps.rds")
+```
+
+Now create some plots to illustrate these posteriors. 
+
+```{r}
+samps <- readRDS("ex_samps.rds")
+rs <- readRDS("ex_summary.rds")
+
+# Translate our lambdas into recruitment times for 800 in the main trial, in
+# months, taking rate scale to be per 2 months
+
+samps <- 2*24*800/samps
+samps <- as.data.frame(samps)
+names(samps) <- c("l1", "l2", "l3")
+
+# Also want a posterior for when we ignore clustering
+x <- sum(pilot_sim$data1$y)
+alpha <- 5/100; beta <- 1/100
+samps_ig <- 30*rgamma(4*10^3, alpha + x, rate = beta + 1)/(4*pilot_sim$time1)
+
+samps$l0 <- 2*24*800/samps_ig
+
+samps2 <- melt(samps)
+
+# true mean = 24*800/1762.544 = 10.89335
+
+# Plots densities, with first highlighted as a solid line and others dotted
+df <- samps2[samps2$variable != "l0",]
+
+ggplot(df, aes(value, colour=variable)) +
+  geom_density() +
+  scale_colour_manual("Sample size", values = cols,
+                      labels = c(expression(paste(m[p], "= 4, ", n[p], "= 80")),
+                      expression(paste(m[p], "= 4, ", n[p], "= 200")),
+                      expression(paste(m[p], "= 24, ", n[p], "= 200")))) +
+  xlab("Time to recruit (months)") +
+  ylab("Density") +
+  geom_vline(xintercept = 2*24*800/rs[1,4], linetype = 2) +
+  xlim(c(0, 150)) +
+  theme_minimal()
+
+# True expected rate
+2*24*800/rs[1,4]
+
+# Print quantiles for credible intervals
+quantile(samps$l1, c(0.05, 0.95))
+quantile(samps$l2, c(0.05, 0.95))
+quantile(samps$l3, c(0.05, 0.95))
+```
+
+So we have a single example which suggests that the number of sites is the main driver in precision. We want to generalise that result, which we will do by extending the method to allow sample size determination.
+
+## Sample szie determination
+
+We propose basing the sample size on the average length criterion (ALC). Specifically, we estimate the expected width of the 90% credible interval around our target parameter (the expected recruitment time of the main trial) for any given pilot sample size and weight the benefits of precision against the costs of sampling sites and participants.
+
+
+```{r}
+m <- 30
+n_ps <- c(50, 200)# 80, 110, 140, 170, 200)
+m_ps <- c(4, 24)#8, 12, 16, 20, 24)
+rs <- NULL
+for(n_p in n_ps){
+  
+  for(m_p in m_ps){
+    print(m_p)
+    
+    N <- 10^4
+    
+    # Matching the weakly informative analysis priors
+    #mu <- rnorm(10^4, 2, 5)
+    #sig <- rht(10^4, nu = 10, sigma = 0.6)
+      
+    # A more informative design prior
+    mu <- rnorm(N, 3.5, 1)
+    sig <- rgamma(N, shape = 0.5*3, rate = 0.5*6)
+
+    df <- data.frame()
+    for(i in 1:N){
+      # Simulate pilot data
+      pilot_sim <- sim_rec(m, m_p, n_p, mu[i], sig[i])
+      # Collect true recruitment rate plus two pilot data summary stats
+      r <- c(log(sum(pilot_sim$lambdas)), log(pilot_sim$stats[1]), log(pilot_sim$stats[2] + 1))
+      df <- rbind(df, r)
+    }
+    names(df) <- c("u", "m", "sd")
+    df <- df[order(df$m),]
+    
+    # Fit the quantile  GAM
+    qs <- c(0.05, 0.95)
+    fitq <- mqgam(u ~ ti(m) + ti(sd) + ti(m, sd), data = df, qu = qs)
+    
+    # For each simulated point, get the (estimated) credible interval bounds
+    w_up <- qdo(fitq, qs[2], predict, newdata = df)
+    w_lo <- qdo(fitq, qs[1], predict, newdata = df)
+    
+    # Print any na's
+    print(c(sum(is.na(w_up)), sum(is.na(w_lo))))
+    
+    # Transform to get the median width of the 90% Cr.I. for the time (in years) needed 
+    # to recruit 800 participants
+    rs <- rbind(rs, c(n_p, m_p, median(2*24*800/exp(w_lo) - 2*24*800/exp(w_up), na.rm = TRUE)))
+  }
+}
+
+df <- as.data.frame(rs)
+
+names(df) <- c("n_p", "m_p", "w")
+
+#saveRDS(df, "results3.rds")
 ```
 
 ```{r}
-#fit0 <- glmer(y ~ 1 + (1 | c), data = pilot_sim$data, family = poisson())
+#df <- readRDS("results3.rds")
 
-bprior <- c(prior(normal(2,5), class = "Intercept"),
-            prior(student_t(10, 0, 0.6), class = "sd"))
+cols_scale_f <- colorRampPalette(c("#584195", "#FC9D1D"))
+cols_scale <- cols_scale_f(6)
+
+ggplot(df, aes(m_p, w, colour = as.factor(n_p))) + geom_point() +
+  scale_colour_manual("Participants", values = cols_scale) +
+  xlab("Number of sites") +
+  ylab("Credible interval width") +
+  theme_minimal()
+  
+
+ggplot(df, aes(n_p, w, colour = as.factor(m_p))) + geom_point() +
+  scale_colour_manual("Sites", values = cols_scale) +
+  xlab("Number of participants") +
+  ylab("Credible interval width") +
+  theme_minimal()
+
+#ggsave("./Presentations/SS2.png", height = 7, width = 11, units="cm")
+
+```
+
+## Extension - retention
+
+We can take the same approach when modelling retention in trials. If we consider arrivals not just as recruited participants, but recruited AND retained, then the rates at each site are the recruitment random effects multiplied by the retention random effects. So our target is now time to recruit and retain the target sample size in the main trial, but our pilot summary stats now need to include a mean and sd of the observed site follow-up rates.
+
+```{r}
+sim_rec_ret <- function(m, m_p, n_p, mu, sig, ret_m, ret_n) {
+  # True recruitment rates
+  lambdas <- exp(rnorm(m, mu, sig))
+  
+  # Pilot overall recruitment rate
+  lambda_p <- sum(lambdas[1:m_p])
+  
+  # Recruitment time
+  time <- sum(rexp(n_p, lambda_p))
+  
+  # Site distribution
+  ns <- rmultinom(1, n_p, lambdas[1:m_p]/lambda_p)
+  
+  # True retention rates 
+  beta <- (alpha - ret_m*alpha)/ret_m
+  alpha <- ret_n - beta
+  gammas <- rbeta(m, alpha, beta)
+  
+  # Observed retentions
+  ret_ns <- rbinom(m_p, ns, gammas[1:m_p])
+  
+  df <- data.frame(y = ret_ns,
+                   c = 1:m_p)
+  
+  return(list(data = df, lambdas = lambdas*gammas, time = time, 
+              stats = c(mean(ns/time), sd(ns/time),
+                        mean(ret_ns/ns, na.rm = T), sd(ret_ns/ns, na.rm = T))))
+}
+
+sim_rec_ret(m=30, m_p=4, n_p=50, mu, sig, ret_m=0.9, ret_n=10)
+```
+
+```{r}
+m <- 30
+n_ps <- c(50, 200)# 80, 110, 140, 170, 200)
+m_ps <- c(4, 24)#8, 12, 16, 20, 24)
+rs <- NULL
+for(n_p in n_ps){
+  
+  for(m_p in m_ps){
+    print(m_p)
+    N <- 10^4
+    
+    mu <- rnorm(N, 3.5, 1)
+    sig <- rgamma(N, shape = 0.5*3, rate = 0.5*6)
+    
+    ret_m <- rbeta(N, 9*5, 1*5)
+    ret_n <- rnorm(N, 10, 1)
+    
+    df <- data.frame()
+    for(i in 1:N){
+      # Simulate pilot data
+      pilot_sim <- sim_rec_ret(m, m_p, n_p, mu[i], sig[i], ret_m[i], ret_n[i])
+      # Collect true recruitment rate plus two pilot data summary stats
+      r <- c(log(sum(pilot_sim$lambdas)), 
+             log(pilot_sim$stats[1]), log(pilot_sim$stats[2] + 1),
+             log(pilot_sim$stats[3]), pilot_sim$stats[4])
+      df <- rbind(df, r)
+    }
+    names(df) <- c("u", "m", "sd", "x3", "x4")
+    df <- df[order(df$m),]
+    df <- df[df$x3 < quantile(df$x3, 0.995), ]
+    
+    # Fit the quantile  GAM
+    qs <- c(0.05, 0.95)
+    fitq <- mqgam(u ~ ti(m) + ti(sd) + ti(x3) + ti(x4) + ti(m, x3), data = df, qu = qs) 
+                   # ti(m, sd) + ti(x3, x4) + ti(m, x3) + ti(sd, x3)
+    
+    # For each simulated point, get the (estimated) credible interval bounds
+    w_up <- qdo(fitq, qs[2], predict, newdata = df)
+    w_lo <- qdo(fitq, qs[1], predict, newdata = df)
+    
+    # Print any na's
+    print(c(sum(is.na(w_up)), sum(is.na(w_lo))))
+    
+    # Transform to get the median width of the 90% Cr.I. for the time (in years) needed 
+    # to recruit 800 participants
+    rs <- rbind(rs, c(n_p, m_p, median(2*24*800/exp(w_lo) - 2*24*800/exp(w_up), na.rm = TRUE)))
+  }
+}
+
+df <- as.data.frame(rs)
+
+names(df) <- c("n_p", "m_p", "w")
+```
+
+
+# Methodology
+
+## Introduction
+
+A common basis for SSD when a Bayesian analysis will be carried out is the average length of the credible interval around the target parameter (keeping the interval coverage fixed at $1-\alpha$%). When this can't be determined in closed form, we can approximate it by first drawing from the unconditional data distribution (i.e. marginalising over the parameter priors), analysing each data set through MCMC, and then averaging the resulting credible interval lengths. But this can take a long time, and so might not be used in practice.
+
+## Details
+
+Given the set of prior predictive draws, we want to estimate the interval lengths for each one. If our intervals are based on quantiles, then we could get these lengths from the quantile functions
+
+$$
+g_\tau(y) = \inf\{ \theta : F_{\theta | y}(\theta) \geq \tau\}
+$$
+for quantiles $\tau = \alpha/2$ and $\tau = 1 - \alpha/2$. Although we can't determine the nonlinear functions $g_{\tau}(.)$ in closed form in general, we can estimate them through nonlinear quantile regression of the $\theta$ values in our prior predictive sample against their corresponding data $y$, providing the latter can be summarised as a low-dimension statistic. This is essentially the same approach as has been used in a health economic context to estimate the expected value of sample information, which instead used regular nonlinear regression to estimate the posterior expectation of $\theta$ as a function of $y$.
+
+## Evaluation
+
+### Beta-binomial
+
+Let $x \sim Bin(n, \theta)$, with $\theta \sim Beta(a, b)$. Since this gives us a conjugate Beta posterior, we can calculate the credible intervals exactly:
+
+
+```{r}
+library(extraDistr)
+
+# Exact calculation
+n_p <- 50
+a <- 8; b <- 2
+xs <- 0:n_p
+
+# Get the CI lengths of every possible posterior
+up <- sapply(xs, function(x) qbeta(0.95, a + x, b + n_p - x))
+lo <- sapply(xs, function(x) qbeta(0.05, a + x, b + n_p - x))
+l <- up - lo
+
+# Plot the intervals
+df_p <- data.frame(x = rep(xs, 2),
+                   p = c(lo, up),
+                   q = factor(rep(c(0.05, 0.95), each = length(xs))))
+
+p <- ggplot(df_p, aes(x, p, group = q)) + geom_line(linetype=2) +
+  xlab("Number of events") + ylab("Probability") +
+  theme_minimal()
+p
+```
+
+For our approximation, we start by simulating from the prior predictive:
+
+```{r}
+# Regression approximation
+pr <- rbeta(10^5, a, b)
+x <- rbinom(10^5, n_p, pr)
+```
+
+No we fit quantile regression models of the true probabilities `p` against the observed data `x` (though note we use a logit transform of the probability):
+
+```{r}
+t <- log(pr/(1-pr))
+
+df <- data.frame(pr=pr, t=t, x=x)
+
+qs <- c(0.05, 0.95)
+fitq <- mqgam(t ~ s(x), data = df, qu = qs)
+    
+# For each point, get the estimated credible interval width
+df$w_up <- qdo(fitq, qs[2], predict, newdata = df)
+df$w_lo <- qdo(fitq, qs[1], predict, newdata = df)
+
+df <- df[order(df$x),]
+
+# Transform back to probablity scale
+df$w_up2 <- exp(df$w_up)/(1 + exp(df$w_up))
+df$w_lo2 <- exp(df$w_lo)/(1 + exp(df$w_lo))
+
+df_p2 <- data.frame(x = rep(df$x, 2),
+                   p = c(df$w_lo2, df$w_up2),
+                   q = factor(rep(c(0.05, 0.95), each = length(df$x))))
+
+# Add some of the prior predictive samples
+samps <- sample(1:nrow(df), 10^3)
+df_p3 <- data.frame(x = df$x[samps],
+                    p = df$pr[samps],
+                    q=rep(1, 1000))
+
+# Add to plot
+p + geom_line(data = df_p2, colour = cols[1], size = 1) + geom_point(data = df_p3, alpha= 0.2)
+```
+
+We see there is very close agreement between the true and estimated quantile functions except for at the lower end of the data scale. As illustrated by the sample of prior predictive points, though, when we take the average of the credible interval lengths with respect to the prior predictive these differences will have very little impact:
+
+```{r}
+# True ALC, weighting the exact interval lengths by the prior predictive density (i.e. beta-binomial)
+sum(l*dbbinom(xs, n_p, a, b))
+
+# Estimated ALCT
+mean(df$w_up2 - df$w_lo2)
+
+# Monte Carlo standard error in the estimate
+sqrt(var(df$w_up2 - df$w_lo2)/nrow(df))
+```
+We see very close agreement, although there is a slight upward bias in the estimate.
+
+### Pilot trial recruitment
+
+[Note that when we do the nested MC, we can calculate both HPD's and quantile intervals for the appendix to back up our later point in the discussion]
+
+As a more complex example, consider a pilot trial which will collect trial recruitment data. Specifically, it will recruit $n_p$ participants across $m_p$ sites, which are taken from a larger number of $m$ sites which will be recruiting in the main trial. We want to choose the pilot sample size so that our prediction of how long the main trial will take to recruit its target of $n = 800$ participants is sufficiently precise, which we formalise as the average length of a 90% credible interval around that parameter.
+
+We assume sites have variable recruitment rates $\lambda_i, i = 1, \ldots, m_p$ and that interarrival time at site $i$ follow an exponential distribution with rate $\lambda_i \sim logNormal(m, s)$. This means that the time to recruit participant $n_p$ is $t_p ~|~ \lmabda_1, \ldots, \lambda_{m_p} \sim Gamma(n_p, \sum_{i=1}^{m_p} \lambda_i)$, and the numbers recruited by each site follows a multinomial distribution of size $n_p$ with probabilities $\lambda_i/ \sum_{i=1}^{m_p} \lambda_i$.
+
+Our target parameter is the expected time to recruit $n = 800$ participants across all $m$ sites in the main trial, i.e. $800/\sum_{i=1}^{m} \lambda_i$.
+
+Our priors are on the mean and standard deviation of the lognormal distribution of site recruitment rates: $m \sim N(3.5, 1), s \sim Gamma(1.5, 3)$ (where we are using the rate parameterisation of the latter).
+
+We want to compare a nested MC approach against the regression approach. We will simulate one set of draws from the prior predictive,  record the true parameter being estimated and the upper and lower intervals and the computation time. And then repeat everything for two different choices of outer sample number.
+
+```{r}
+# Initialise Bayesian model
+pars <- ln_pars(m = 35, s = 25)
+mu <- pars[1]; sig <- pars[2]
+pilot_sim <- sim_rec(30, 8, 100, mu, sig)
+
+bprior <- c(prior(normal(3.5,1), class = "Intercept"),
+            prior(gamma(0.5*3, 0.5*6), class = "sd"))
 
 fit  <- brm(y ~ 1 + (1 | c), data = pilot_sim$data, family = poisson(),
             prior = bprior, silent = 2)
@@ -252,387 +650,103 @@ summary(fit, priors = TRUE)
 ```
 
 ```{r}
-m <- 30
-n_ps <- c(80, 120, 200)
-m_ps <- c(4, 8, 12, 16, 20, 24)
-rs <- NULL
-for(n_p in n_ps){
-  
-  for(m_p in m_ps){
-    print(m_p)
-    
-    for(j in 1:200){
-  
-    pilot_sim <- sim_rec2(m, m_p, n_p, mu, sig)
-    output <- capture.output(fit <- suppressWarnings(update(fit, newdata = pilot_sim$data, silent = 2)))
-    
-    s <- as_draws(fit)
-    beta_0 <- extract_variable(s, "b_Intercept")
-    sd_r <- extract_variable(s, "sd_c__Intercept")
-    
-    # Get posterior predicted random effects for the non-pilot sites
-    us <- sapply(1:(m-m_p), function(x) exp(rnorm(length(beta_0), beta_0, sd_r)))
-    
-    r <- ranef(fit, summary = F)
-    us <- cbind(us, exp(r$c[,1:m_p,1] + beta_0))
-    
-    lambda <- rowSums(us)/pilot_sim$time
-    mean(lambda > 1250)
-    
-    r <- c(m_p, n_p, sum(pilot_sim$data$y),
-           sum(pilot_sim$lambdas),
-           mean(lambda),
-           sd(lambda),
-           as.numeric(quantile(lambda, probs = c(0.05, 0.95))))
-    
-    rs <- rbind(rs, r)
-    }
-  }
-}
-results <- as.data.frame(rs)
-names(results) <- c("m_p", "n_p", "true_n_p", "true", "est", "sd", "l_cr", "u_cr")
-```
+N <- 10^3
 
-```{r}
-results$rel_cr <- (results$u_cr - results$l_cr)/results$true
+times <- NULL
+ptm <- proc.time()
 
-ggplot(results, aes(x = m_p, group = m_p)) +
-  geom_boxplot(aes(y=u_cr - l_cr)) +
-  ylim(c(0, 4000))
-
-ggplot(results, aes(x = n_p, group = n_p)) +
-  geom_boxplot(aes(y=u_cr - l_cr)) +
-  ylim(c(0, 4000))
-
-ggplot(results, aes(x = true_n_p, colour = m_p)) +
-  geom_point(aes(y=u_cr - l_cr)) +
-  ylim(c(0, 4000))
-```
-
-
-
-```{r}
-cond_exp_pow <- function(lam) {
-  n <- 1:10000
-  pow <- 1 - pnorm(qnorm(0.975) - 0.15/sqrt(2/n))
-  pr <- 2*dpois(2*n, lam)
-  return(sum(pow*pr))
-}
-
-# Get posterior distribution of utility (= power of main trial, conditional on 
-# overall rate lambda but averaging over numbers actually recruited)
-us <- sapply(lambda, cond_exp_pow) - 0.5
-
-# Expected utility = expected power above threshold of 0.5. Proceed if exp(u) > 0.
-mean(us)
-```
-
-```{r}
-library(mgcv)
-library(extraDistr)
-library(ggplot2)
-
-m <- 30
-n_ps <- c(80, 110, 140, 170, 200)
-m_ps <- c(8, 12, 16, 20, 24)
-rs <- NULL
-for(n_p in n_ps){
-  
-  for(m_p in m_ps){
-    print(m_p)
-
-    df <- data.frame()
-    for(i in 1:10^4){
-      # Matching the weakly informative analysis priors
-      mu <- rnorm(1, 2, 5)
-      sig <- rht(1, nu = 10, sigma = 0.6)
-      
-      # A more informative design prior
-      mu <- rnorm(1, 3.3, 0.5)
-      sig <- rgamma(1, shape = 3, rate = 6)
-      
-      pilot_sim <- sim_rec2(m, m_p, n_p, mu, sig)
-      r <- c(cond_exp_pow(sum(pilot_sim$lambdas)), pilot_sim$stats, sum(pilot_sim$lambdas))
-      df <- rbind(df, r)
-    }
-    names(df) <- c("u", "m", "sd", "l")
-    
-    fit <- gam(u ~ ti(m) + ti(sd) + ti(m, sd), data = df)
-    
-    r <- data.frame(u = df$u,
-                    p_u = predict(fit, newdata = df[,2:3]))
-    
-    r$go <- r$p_u > 0.7
-    
-    fit2 <- gam(go ~ s(u), data = r, family = binomial())
-    
-    df3 <- data.frame(u = r$u, pow = predict(fit2, type = "response"))
-    df3 <- df3[order(df3$pow),]
-    rs <- rbind(rs, c(n_p, m_p, df3[df3$pow >= 0.1,"u"][1], df3[df3$pow >= 0.9,"u"][1]))
-  }
-}
-
-df <- as.data.frame(rs)
-
-ggplot(df, aes(V2, colour = as.factor(V1))) + geom_point(aes(y= V3)) +
-  geom_point(aes(y=V4))
-
-ggplot(df, aes(V1, colour = as.factor(V2))) + geom_point(aes(y= V3)) +
-  geom_point(aes(y=V4))
-```
-
-
-
-### Random site starts
-
-Now consider a situation as in ARIEL, where sites will start at a random time. The pilot design is therefore not the actual number of sites, but the time of analysis.
-
-```{r}
-m <- 40
-t_p <- 1 # time we'll do the analysis
-
-# alternative
-pars <- ln_pars(m = 3.3, s = 3)
-
-mu <- pars[1]; sig <- pars[2]
-
-# Prior dist on overall lambda, conditional on mu and sig
-lambda_prior <- replicate(10^4, sum(exp(rnorm(m, mu, sig))))
-hist(lambda_prior)
-
-sim_rec2 <- function(m, t_p, mu, sig) {
-  # Instead of stopping at n_p, stop at a fixed time t_p
-  
-  # True recruitment rates
-  lambdas <- exp(rnorm(m, mu, sig))
-  
-  # Site start times
-  starts <- cumsum(rexp(m, m/3))
-  starts <- starts[starts < t_p]
-  
-  m_p <- length(starts)
-  
-  # Wait times at each pilot site
-  t <- matrix(rexp(m_p*200, rate = lambdas[1:m_p]), ncol = m_p, byrow = T)
-  # Transform to arrival times
-  t2 <- apply(t, 2, cumsum)
-  # Add start time delays
-  t2 <- t(t(t2) + starts)
-  # Merged arrival times
-  t3 <- melt(t2)[,2:3]
-  t3 <- t3[order(t3$value),]
-  # Cap at stop time
-  t3 <- t3[t3$value <= t_p,]
-  # Counts by centre
-  ns <- as.numeric(table(t3$Var2))
-  ns <- c(ns, rep(0,m_p - length(ns)))
-  
-  # Recruitment time
-  times <- t_p - starts
-  
-  df <- data.frame(y = ns,
-                   c = 1:m_p,
-                   t = times)
-  
-  return(list(data = df, lambdas = lambdas, 
-              stats = c(log(mean(ns/time)), log(sd(ns/time)))))
-}
-
-pilot_sim <- sim_rec2(m, t_p, mu, sig)
-```
-
-```{r}
-#fit0 <- glmer(y ~ 1 + (1 | c), data = pilot_sim$data, family = poisson())
-
-bprior <- c(prior(normal(2,5), class = "Intercept"),
-            prior(student_t(10, 0, 0.6), class = "sd"))
-
-fit  <- brm(y ~ 1 + offset(log(t)) + (1 | c), data = pilot_sim$data, family = poisson(),
-            prior = bprior, silent = 2)
-
-summary(fit, priors = TRUE)
-```
-
-```{r}
-m <- 30
-t_ps <- c(0.5, 1, 1.5)
-rs <- NULL
-
-  
-  for(t_p in t_ps){
-    print(m_p)
-    
-    for(j in 1:100){
-  
-    pilot_sim <- sim_rec2(m, t_p, mu, sig)
-    m_p <- nrow(pilot_sim$data)
-    output <- capture.output(fit <- suppressWarnings(update(fit, newdata = pilot_sim$data, silent = 2)))
-    
-    s <- as_draws(fit)
-    beta_0 <- extract_variable(s, "b_Intercept")
-    sd_r <- extract_variable(s, "sd_c__Intercept")
-    
-    # Get posterior predicted random effects for the non-pilot sites
-    us <- sapply(1:(m-m_p), function(x) exp(rnorm(length(beta_0), beta_0, sd_r)))
-    
-    r <- ranef(fit, summary = F)
-    us <- cbind(us, exp(r$c[,1:m_p,1] + beta_0))
-    
-    lambda <- rowSums(us)/t_p
-    mean(lambda > 1250)
-    
-    r <- c(t_p, m_p, sum(pilot_sim$data$y),
-           sum(pilot_sim$lambdas),
-           mean(lambda),
-           sd(lambda),
-           as.numeric(quantile(lambda, probs = c(0.05, 0.95))))
-    
-    rs <- rbind(rs, r)
-    }
-  }
-
-results <- as.data.frame(rs)
-names(results) <- c("t_p", "n_p", "true_n_p", "true", "est", "sd", "l_cr", "u_cr")
-```
-
-```{r}
-results$rel_cr <- (results$u_cr - results$l_cr)/results$true
-
-ggplot(results, aes(x = t_p, group = t_p)) +
-  geom_boxplot(aes(y=u_cr - l_cr)) + ylim(c(0, 1000))
-
-ggplot(results, aes(x = true_n_p, colour = t_p)) +
-  geom_point(aes(y=u_cr - l_cr)) + ylim(c(0, 1000))
-
-ggplot(results, aes(x = n_p, colour = t_p)) +
-  geom_point(aes(y=u_cr - l_cr)) + ylim(c(0, 1000))
-```
-
-
-### Old
-
-```{r}
-df2 <- data.frame()
-for(i in 1:10^4){
-  # A more informative design prior
-  mu <- rnorm(1, 3.6, 0.5)
-  sig <- rgamma(1, shape = 3, rate = 6) #rht(1, nu = 50, sigma = 0.3)
-  #sig <- rht(1, nu = 50, sigma = 0.3)
-  
-  # Matching the weakly informative analysis priors
-  #mu <- rnorm(1, 2, 5)
-  #sig <- rht(1, nu = 10, sigma = 0.6)
-  
-  pilot_sim <- sim_rec2(m, m_p, n_p, mu, sig)
-  r <- c(cond_exp_pow(sum(pilot_sim$lambdas)) - 0.75, pilot_sim$stats, sum(pilot_sim$lambdas))
-  df2 <- rbind(df2, r)
-}
-names(df2) <- c("u", "m", "sd", "l")
-
-r <- data.frame(u = df2$u,
-                p_u = predict(fit, newdata = df2[,2:3]))
-
-# Probability of a type I error
-mean(r$u < 0)
-mean(r$u < 0 & r$p_u > 0)
-
-# Probability of a type II error
-mean(r$u > 0)
-mean(r$u > 0 & r$p_u < 0)
-
-mean(r[r$u < 0,]$p_u > 0, na.rm = T)
-mean(r[r$u > 0,]$p_u < 0, na.rm = T)
-
-mean(r[r$p_u < 0,]$u > 0, na.rm = T)
-mean(r[r$p_u > 0,]$u < 0, na.rm = T)
-
-# Probability of a correct decision
-mean((r$u > 0 & r$p_u > 0) | (r$u < 0 & r$p_u < 0))
-
-r$go <- r$p_u > 0
-
-ggplot(r, aes(u+0.75, colour = go)) + geom_density(aes(y = after_stat(count))) +
-  geom_vline(xintercept = 0.75, linetype = 2)
-```
-
-We can also compare this against a simple PC approach - for any given PC, we can find a correpsonding decision and then plot the same OCs.
-
-```{r}
-r <- data.frame(u = df2$u,
-                p_u = df2$m - 3.68)
-
-mean(r[r$u <0,]$p_u >0)
-mean(r[r$u >0,]$p_u <0)
-```
-
-
-```{r}
-# null, matching moments of gamma with sh = 3
-pars <- ln_pars(m = 35, s = 20)
-
-mu <- pars[1]; sig <- pars[2]
-
-df <- data.frame()
-for(i in 1:10^3){
+mc_r <- NULL
+for(i in 1:N){
+  # Sample from the prior predictive
+  mu <- rnorm(1, 3.5, 1)
+  sig <- rgamma(1, shape = 0.5*3, rate = 0.5*6)
   pilot_sim <- sim_rec(m, m_p, n_p, mu, sig)
-  x <- c(cond_exp_pow(sum(pilot_sim$lambdas)) - 0.75, pilot_sim$stats)
-  df <- rbind(df, x)
+  
+  # Fit the Bayesian model
+  output <- capture.output(fit <- suppressWarnings(update(fit, newdata = pilot_sim$data, 
+                                                          iter = 5000, silent = 2)))
+        
+  s <- as_draws(fit)
+  beta_0 <- extract_variable(s, "b_Intercept")
+  sd_r <- extract_variable(s, "sd_c__Intercept")
+  
+  # Get posterior predicted random effects for the non-pilot sites
+  us <- sapply(1:(m-m_p), function(x) exp(rnorm(length(beta_0), beta_0, sd_r)))
+  
+  r <- ranef(fit, summary = F)
+  us <- cbind(us, exp(r$c[,1:m_p,1] + beta_0))
+  
+  lambda <- 2*24*800/(rowSums(us)/pilot_sim$time)
+  
+  r <- c(m_p, n_p,
+         2*24*800/sum(pilot_sim$lambdas),
+         as.numeric(quantile(lambda, probs = c(0.025, 0.05, 0.1, 
+                                               0.9, 0.95, 0.975))))
+  mc_r <- rbind(mc_r, r)
+}
+
+median(mc_r[,8] - mc_r[,5])
+mean(mc_r[,8] - mc_r[,5])
+
+times <- rbind(times, proc.time() - ptm)
+
+ptm <- proc.time()
+
+mu <- rnorm(N, 3.5, 1)
+sig <- rgamma(N, shape = 0.5*3, rate = 0.5*6)
+
+np_r <- NULL
+df <- data.frame()
+for(i in 1:N){
+  # Simulate pilot data
+  pilot_sim <- sim_rec(m, m_p, n_p, mu[i], sig[i])
+  # Collect true recruitment rate plus two pilot data summary stats
+  r <- c(log(sum(pilot_sim$lambdas)), log(pilot_sim$stats[1]), log(pilot_sim$stats[2] + 1))
+  df <- rbind(df, r)
 }
 names(df) <- c("u", "m", "sd")
+df <- df[order(df$m),]
 
-plot(predict(fit, newdata = df[,2:3]), df$u)
+# Fit the quantile  GAM
+qs <- c(0.05, 0.95)
+fitq <- mqgam(u ~ ti(m) + ti(sd), data = df, qu = qs)
 
-df$p_u <- predict(fit, newdata = df[,2:3])
+# For each simulated point, get the (estimated) credible interval bounds
+w_up <- qdo(fitq, qs[2], predict, newdata = df)
+w_lo <- qdo(fitq, qs[1], predict, newdata = df)
 
-r <- data.frame(u = df$u,
-                p_u = predict(fit, newdata = df[,2:3]))
+# Print any na's
+print(c(sum(is.na(w_up)), sum(is.na(w_lo))))
 
-# Type I
-mean(r$p_u[r$u < 0] > 0)
+# Transform to get the median width of the 90% Cr.I. for the time (in years) needed 
+# to recruit 800 participants
+np_r <- rbind(np_r, c(n_p, m_p, 
+                      median(2*24*800/exp(w_lo) - 2*24*800/exp(w_up), na.rm = TRUE),
+                      mean(2*24*800/exp(w_lo) - 2*24*800/exp(w_up), na.rm = TRUE)))
+np_r
 
-r$go <- r$p_u > 0
-
-ggplot(r, aes(u, colour = go)) + geom_density(aes(y = after_stat(count)))
-
-# Repeat for alternative hypothesis
-
-# alternative, matching moments of gamma with sh = 3
-pars <- ln_pars(m = 50, s = 29)
+times <- rbind(times, proc.time() - ptm)
 ```
 
 
-```{r}
-X <- matrix(c(rep(1, 80), rep(0:1, each = 40)), ncol = 2)
-sig <- 1
-solve(t(X) %*% X)
 
-1/80
-```
 
-## LP
+## Discussion
 
-Can we motivate Bayesian approach, partially, via the likelihood principle?
+We are assuming quantile-based credible intervals, rather than the HPD's typically referred to in the ALC literature. But we know this won't make much difference in the case of unimodel and roughly symmetric posteriors, so as long as this is what we expect (and we can check by running some hypothetical MCMC analyses) then we don't need to worry. Regardless, it is still a useful metric for sample size determination.
 
-```{r}
-n <- 170; t <- 1
+Connection to ABC.
 
-m <- 6
+Regression diagnostics to give confidence in our estimates.
 
-# shape multiplier - a nuisance parameter
-sh <- 3
 
-# Null hypothesis
-r <- 20
-alpha <- sh
-beta <- alpha/r
 
-# Fixed time, recruited n
-1 - pnbinom(n-1, alpha*m, beta/(beta+1))
 
-# Sum of n exponentials (waiting times) with rate beta is gamma(n, beta)
-pgamma(1, n, beta)
 
-lambda <- 150
-1 - ppois(n-1, lambda)
-pgamma(1, n, lambda)
-```
+
+
+
+
+
+
+
