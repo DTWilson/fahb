@@ -21,6 +21,8 @@ Laces - colorectal surgery
 Feasibility study - had 5 sites recruiting 66 participants over 15 months (notes 10 per centre per year would indicate feasibility)
 Main trial - has (at least) 25 sites recruiting 512 participants over 36 months.
 
+In Cancer: 123Go leading to Go2 (Gastro?); and for internal pilots, Ariel (Colorectal), Gusto (Bladder), Dante (Melanoma), Static (CLL)
+
 ### Sampling distributions
 
 We can first illustrate the general point above - that with few centres, we will have low precision in the overall estimate. We can do this by simulating the pilot under a null and alternative hypothesis, recording the estimated per-site recruitment rate each time, and then plotting the estimated densities. We can also use a progression criteria threshold and highlight the corresponding type I and II error rates.
@@ -426,7 +428,9 @@ ggplot(df, aes(n_p, w, colour = as.factor(m_p))) + geom_point() +
 
 ```
 
-## Extension - retention
+## Extensions
+
+### Retention
 
 We can take the same approach when modelling retention in trials. If we consider arrivals not just as recruited participants, but recruited AND retained, then the rates at each site are the recruitment random effects multiplied by the retention random effects. So our target is now time to recruit and retain the target sample size in the main trial, but our pilot summary stats now need to include a mean and sd of the observed site follow-up rates.
 
@@ -517,8 +521,171 @@ df <- as.data.frame(rs)
 names(df) <- c("n_p", "m_p", "w")
 ```
 
+### Random site setup times
+
+In Gusto (bladder), they plan to open 20 sites and will do in internal pilot analysis of recruitment at 6 months, looking at both the number of patients recruited and the number of sites opened. Target sample size is 320 over 36 months. With all sites opened, recruitment target is 13 per month, i.e. 0.65 per site per month, or 7.8 per site per year.
+
+We could incorporate this into our approach - our simulation model should include a model for when sites will set up, then when we do our quantile regression we can include number of sites set up as a third summary statistic. Note this approach works when the number set up at a given time is a sufficient statistic for the set up time model - e.g. if we assume number of set ups will follow a Poisson distribution. 
+
+This could be interesting as we have some specific progression criteria which we can compare against; e.g. we can look at the thresholds and extract the credible intervals at each one. If the intervals have a lot of overlap, we can infer the OC's of the internal pilot are poor. The thresholds are:
+
+upper - >= 30 patients with >= 5 sites
+lower - <= 9 patients with <= 2 sites
+
+```{r}
+# Recall this gives us the mu and sig parameters which will give a dist of
+# recruitment rates with mean m and sd s.
+pars <- ln_pars(m = 7.8, s = 5)
+mu <- pars[1]; sig <- pars[2]
+
+sim_rec_setup <- function(m, int_t, mu, sig, setup_r) {
+  # True recruitment rates
+  lambdas <- exp(rnorm(m, mu, sig))
+  
+  # Setup times - setup_r is expected time between setups
+  setup_ts <- cumsum(rexp(m, 1/setup_r))
+  
+  pilot_sites <- which(setup_ts <= int_t)
+  m_p <- length(pilot_sites)
+  #print(m_p)
+  
+  # Total recruitment rate by interim
+  lambda_p <- sum(lambdas[pilot_sites]*(int_t - setup_ts[pilot_sites])/int_t)
+  
+  # Total recruited at interim
+  n_p <- rpois(1, lambda_p)
+  
+  # Site distribution
+  if(m_p > 0){
+    ns <- rmultinom(1, n_p, (lambdas[pilot_sites]*(int_t - setup_ts[pilot_sites])/int_t)/lambda_p)
+  } else {
+    ns <- 0
+  }
+  
+  # Overall recruitment rate for the remainder of the 3 year trial period
+  full_sites <- which(setup_ts <= 3)
+  time_recruiting <- pmin(3 - setup_ts, 3 - int_t)
+  lambda <- sum(lambdas[full_sites]*(time_recruiting[full_sites]))
+  
+  # Expected number recruited at end of 3 years, given number at interim
+  exp_n <- n_p + rpois(1, lambda) #lambda
+  
+  if(m_p > 0){
+    df <- data.frame(y = ns,
+                   c = 1:m_p)
+  } else {
+    df <- data.frame(y = 0, c = 1)
+  }
+  
+  return(list(data = df, lambda = exp_n,
+              stats = c(m_p, mean(ns/int_t), sd(ns/int_t))))
+}
+
+sim_rec_setup(m=20, int_t=0.5, mu, sig, setup_r=0.1)
+```
+
+Sample size:
+
+```{r}
+m <- 20
+int_ts <- c(0.5)
+rs <- NULL
+for(int_t in int_ts){
+  N <- 10^4
+  
+  # A more informative design prior
+  mu <- rnorm(N, 2.5, 1)
+  sig <- rgamma(N, shape = 0.5*3, rate = 0.5*6)
+  
+  # Prior on setup rate
+  setup_r <- exp(rnorm(10^4, mean = -2.5, sd = 0.5))
+  
+  df <- data.frame()
+  for(i in 1:N){
+    # Simulate pilot data
+    pilot_sim <- sim_rec_setup(m, int_t, mu[i], sig[i], setup_r[i])
+    # Collect true recruitment rate plus three pilot data summary stats
+    r <- c(log(pilot_sim$lambda), pilot_sim$stats[1], log(pilot_sim$stats[2] + 1), log(pilot_sim$stats[3] + 1))
+    df <- rbind(df, r)
+  }
+  names(df) <- c("u", "m_p", "mu", "sd")
+  
+  qs <- c(0.05, 0.95)
+  
+  # Fit the quantile  GAMs at each m_p - note this seems to be slightly to
+  # moderately worse than the below approach so just leaving the code for reference
+  # ws <- NULL
+  # for(m_p in 0:m){
+  #   print(m_p)
+  #   sub_df <- df[df$m_p == m_p,]
+  #   if(nrow(sub_df) > 20){
+  #     if(m_p == 0){
+  #       # No sites recruiting by interim, so no summary stats
+  #       w_up <- rep(quantile(sub_df$u, 0.95), nrow(sub_df))
+  #       w_lo <- rep(quantile(sub_df$u, 0.05), nrow(sub_df))
+  #     } else if(m_p == 1) {
+  #       # One site recruiting, so only a mean summary stat
+  #       fitq <- mqgam(u ~ s(mu), data = sub_df, qu = qs)
+  #       
+  #       w_up <- qdo(fitq, qs[2], predict, newdata = sub_df)
+  #       w_lo <- qdo(fitq, qs[1], predict, newdata = sub_df)
+  #     } else {
+  #       fitq <- mqgam(u ~ ti(mu) + ti(sd) + ti(mu, sd), data = sub_df, qu = qs)
+  #       
+  #       w_up <- qdo(fitq, qs[2], predict, newdata = sub_df)
+  #       w_lo <- qdo(fitq, qs[1], predict, newdata = sub_df)
+  #     }
+  #     ws <- rbind(ws, cbind(w_up, w_lo))
+  #   }
+  # }
+  # 
+  
+  # Fit one overall GAM with m_p as a third dimension
+  fitq <- mqgam(u ~  ti(mu) + ti(sd) + ti(m_p) + 
+                  ti(mu, sd) + ti(m_p, mu) + ti(m_p, sd), data = df, qu = qs)
+        
+  w_up <- qdo(fitq, qs[2], predict, newdata = df)
+  w_lo <- qdo(fitq, qs[1], predict, newdata = df)
+  
+  # Print any na's
+  print(c(sum(is.na(w_up)), sum(is.na(w_lo))))
+  
+  # Transform to get the median width of the 90% Cr.I. for the expected number 
+  # recruited at 36 months
+  rs <- rbind(rs, c(int_t, 
+                    #median(exp(ws[,1]) - exp(ws[,2])), 
+                    median(exp(w_up) - exp(w_lo), na.rm = T)))
+  
+  # Predict intervals at upper and lower progression thresholds
+  exp(qdo(fitq, qs[2], predict, newdata = data.frame(m_p = c(5, 2), 
+                                                 mu = c(log((6/0.5) - 1), log((4.5/0.5) - 1)),
+                                                 sd = rep(mean(df$sd, na.rm = T), 2))))
+  
+  exp(qdo(fitq, qs[1], predict, newdata = data.frame(m_p = c(5, 2), 
+                                                 mu = c(log((6/0.5) - 1), log((4.5/0.5) - 1)),
+                                                 sd = rep(mean(df$sd, na.rm = T), 2))))
+}
+rs
+```
+It might be more straightforward to get the credible intervals (and indeed, the whole posteriors) at the thresholds by running two Bayesian analyses with data matching the thresholds. This would also give a (weak) validation of the approximation. Would need a relatively complex Stan model though. Could just use Gusto throughout the paper, but initially ignore site set ups and assume they all start immediately. The recruitment PC will then likely be easy to meat; but we can still do our analysis at the thresholds and compare the dists to see if there is a lot of uncertainty and overlap.
+
+## Discussion
+
+Shortcomings of the Bayesian precision approach - how can we say how much precision we need / are willing to pay for? One general approach is to model how the pilot information will be used, i.e. the decision process which follows. But this is particularly complex since we are likely to make adaptations between the pilot and main trial. We could ignore this and assume a simpler process, similar to the Whitehead (?) paper on SD estimation.
+
+Further extensions - we have highlighted retention as well as recruitment as this will also be a hierarchical model, but we can extend to other pilot targets like SD, adherence etc; to breaking down the recruitment process (estimating numbers screened, eligible, consenting etc); and the treatment effect. SSD could then look at the precision on all these parameters, or it could try to combine some/all of them into a single measure. E.g. feasibility parameters can potentially be boiled down to an estimated power of the main trial; incorporating the treatment effect could be boiled down to an unconditional power / assurance.
+
+[]
+
+
 
 # Methodology
+
+Use these problems to also explore using methods like random forest, SVMs and neural networks to find decision regions - simulating data, classify each data by the optimal decision, and then apply these classifiers, both of which should cope well in high dimensions, to find the optimal critical region.
+
+Note that SVMs in particular might help with the probalem of uninformative priors leading to a very wide distribution of the data, since the focus will be on the middle. But also, centering and normalising the data features could fix that for the GAM approach.
+
+Application here could be fast calculation of Bayesian power (as basis for sample size in a Bayesain analysis); especially if we are arguing that power represents a sensible value function, as in rove.
 
 ## Introduction
 
