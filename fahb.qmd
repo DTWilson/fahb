@@ -558,11 +558,11 @@ pars <- ln_pars(m = 7.8, s = 5)
 mu <- pars[1]; sig <- pars[2]
 
 sim_rec_setup <- function(m, int_t, mu, sig, setup_r) {
-  # True recruitment rates
+  # True recruitment rates per site per year
   lambdas <- exp(rnorm(m, mu, sig))
   
-  # Setup times - setup_r is expected time between setups
-  setup_ts <- cumsum(rexp(m, 1/setup_r))
+  # Setup times - setup_r is expected number of sites in a year
+  setup_ts <- cumsum(rexp(m, setup_r))
   
   pilot_sites <- which(setup_ts <= int_t)
   m_p <- length(pilot_sites)
@@ -600,27 +600,33 @@ sim_rec_setup <- function(m, int_t, mu, sig, setup_r) {
               stats = c(m_p, mean(ns/int_t), sd(ns/int_t))))
 }
 
-sim_rec_setup(m=20, int_t=0.5, mu, sig, setup_r=0.1)
+sim_rec_setup(m=20, int_t=0.5, mu, sig, setup_r=10)
 ```
 
 Analysis - we can probably get the actual recruitment and site data at 6 months from GUSTO. Given this, we can do a Bayesain analysis to illustrate the problem of precision:
 
 ```{r}
 m <- 20
-m_p <- 4
 
-y <- c(18, 8, 13, 10, 11, 16)
+# Upper threshold
+y <- c(6, 3, 9, 5, 7)
+
+# Lower threshold
+#y <- c(3, 6)
 
 int_data <- data.frame(y = y,
                        c = 1:length(y))
 
 n_p <- sum(int_data$y)
+m_p <- length(y)
 
-bprior <- c(prior(normal(2,5), class = "Intercept"),
-            prior(student_t(10, 0, 0.6), class = "sd"))
+# Check priors for this example - expect rate of 3.9 per site per 6-months
+bprior <- c(prior(normal(1.35, 0.5), class = "Intercept"),
+            prior(student_t(10, 0, 0.11), class = "sd"))
 
 fit  <- brm(y ~ 1 + (1 | c), data = int_data, family = poisson(),
-            prior = bprior, silent = 2)
+            prior = bprior, silent = 2,
+            iter = 3000, warmup = 500)
 
 summary(fit, priors = TRUE)
 
@@ -650,9 +656,10 @@ weighted_us <- us * setup_weights
 lambda <- rowSums(weighted_us)
 
 # Simulate corresponding numbers recruited in main trial at 3 years
-pred_n <- rpois(length(lambda), lambda)
+pred_n <- rpois(length(lambda), lambda) + n_p
 
 quantile(pred_n, c(0.05, 0.95))
+mean(pred_n > 320)
 ```
 
 
@@ -666,12 +673,15 @@ rs <- NULL
 for(int_t in int_ts){
   N <- 10^4
   
-  # A more informative design prior
-  mu <- rnorm(N, 2.5, 1)
-  sig <- rgamma(N, shape = 0.5*3, rate = 0.5*6)
+  bprior <- c(prior(normal(1.35, 0.5), class = "Intercept"),
+            prior(student_t(10, 0, 0.11), class = "sd"))
+  
+  
+  mu <- log(2*exp(rnorm(N, 1.35, 0.5)))
+  sig <- rgamma(N, shape = 0.5*3, rate = 0.5*20)
   
   # Prior on setup rate
-  setup_r <- exp(rnorm(10^4, mean = -2.5, sd = 0.5))
+  setup_r <- rgamma(N, 20, 2)
   
   df <- data.frame()
   for(i in 1:N){
@@ -685,34 +695,6 @@ for(int_t in int_ts){
   
   qs <- c(0.05, 0.95)
   
-  # Fit the quantile  GAMs at each m_p - note this seems to be slightly to
-  # moderately worse than the below approach so just leaving the code for reference
-  # ws <- NULL
-  # for(m_p in 0:m){
-  #   print(m_p)
-  #   sub_df <- df[df$m_p == m_p,]
-  #   if(nrow(sub_df) > 20){
-  #     if(m_p == 0){
-  #       # No sites recruiting by interim, so no summary stats
-  #       w_up <- rep(quantile(sub_df$u, 0.95), nrow(sub_df))
-  #       w_lo <- rep(quantile(sub_df$u, 0.05), nrow(sub_df))
-  #     } else if(m_p == 1) {
-  #       # One site recruiting, so only a mean summary stat
-  #       fitq <- mqgam(u ~ s(mu), data = sub_df, qu = qs)
-  #       
-  #       w_up <- qdo(fitq, qs[2], predict, newdata = sub_df)
-  #       w_lo <- qdo(fitq, qs[1], predict, newdata = sub_df)
-  #     } else {
-  #       fitq <- mqgam(u ~ ti(mu) + ti(sd) + ti(mu, sd), data = sub_df, qu = qs)
-  #       
-  #       w_up <- qdo(fitq, qs[2], predict, newdata = sub_df)
-  #       w_lo <- qdo(fitq, qs[1], predict, newdata = sub_df)
-  #     }
-  #     ws <- rbind(ws, cbind(w_up, w_lo))
-  #   }
-  # }
-  # 
-  
   # Fit one overall GAM with m_p as a third dimension
   fitq <- mqgam(u ~  ti(mu) + ti(sd) + ti(m_p) + 
                   ti(mu, sd) + ti(m_p, mu) + ti(m_p, sd), data = df, qu = qs)
@@ -723,32 +705,32 @@ for(int_t in int_ts){
   # Print any na's
   print(c(sum(is.na(w_up)), sum(is.na(w_lo))))
   
-  # Transform to get the median width of the 90% Cr.I. for the expected number 
+  # Transform to get the median width of the 90% Cr.I. for the number 
   # recruited at 36 months
   rs <- rbind(rs, c(int_t, 
-                    #median(exp(ws[,1]) - exp(ws[,2])), 
                     median(exp(w_up) - exp(w_lo), na.rm = T)))
   
-  # Predict intervals at upper and lower progression thresholds
-  exp(qdo(fitq, qs[2], predict, newdata = data.frame(m_p = c(5, 2), 
-                                                 mu = c(log((6/0.5) - 1), log((4.5/0.5) - 1)),
-                                                 sd = rep(mean(df$sd, na.rm = T), 2))))
+  # empirical coverage
+  print(mean(df$u < w_up & df$u > w_lo, na.rm = T))
   
-  exp(qdo(fitq, qs[1], predict, newdata = data.frame(m_p = c(5, 2), 
-                                                 mu = c(log((6/0.5) - 1), log((4.5/0.5) - 1)),
-                                                 sd = rep(mean(df$sd, na.rm = T), 2))))
+  # Predicted interval at the thresholds
+  # Recall mu is log(mean yearly recruited per site + 1)
+  # For sd, take hypothetical numbers of (3, 6) and (6, 3, 9, 5, 7)
+  df_t <- data.frame(m_p = c(2, 5),
+                     mu = c(log(2*9/2 + 1), log(2*30/5 + 1)),
+                     sd = c(log(sd(2*c(3,6)) + 1), log(sd(2*c(6,3,9,5,7)) + 1)))
+  print(exp(c(qdo(fitq, qs[2], predict, newdata = df_t),
+          qdo(fitq, qs[1], predict, newdata = df_t))))
 }
 rs
 ```
-It might be more straightforward to get the credible intervals (and indeed, the whole posteriors) at the thresholds by running two Bayesian analyses with data matching the thresholds. This would also give a (weak) validation of the approximation. Would need a relatively complex Stan model though. Could just use Gusto throughout the paper, but initially ignore site set ups and assume they all start immediately. The recruitment PC will then likely be easy to meat; but we can still do our analysis at the thresholds and compare the dists to see if there is a lot of uncertainty and overlap.
+It might be more straightforward to get the credible intervals (and indeed, the whole posteriors) at the thresholds by running two Bayesian analyses with data matching the thresholds. This would also give a (weak) validation of the approximation. 
 
 ## Discussion
 
 Shortcomings of the Bayesian precision approach - how can we say how much precision we need / are willing to pay for? One general approach is to model how the pilot information will be used, i.e. the decision process which follows. But this is particularly complex since we are likely to make adaptations between the pilot and main trial. We could ignore this and assume a simpler process, similar to the Whitehead (?) paper on SD estimation.
 
 Further extensions - we have highlighted retention as well as recruitment as this will also be a hierarchical model, but we can extend to other pilot targets like SD, adherence etc; to breaking down the recruitment process (estimating numbers screened, eligible, consenting etc); and the treatment effect. SSD could then look at the precision on all these parameters, or it could try to combine some/all of them into a single measure. E.g. feasibility parameters can potentially be boiled down to an estimated power of the main trial; incorporating the treatment effect could be boiled down to an unconditional power / assurance.
-
-[]
 
 
 
