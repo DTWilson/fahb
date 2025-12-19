@@ -11,7 +11,7 @@ Internal pilots embedded in clinical trials let us observe recruitment rates and
 
 ## Review
 
-Progression decisions are often made using pre-specified progression criteria, with some funders suggesting the form these should take - e.g. NIHR. Some have argued that making decisions this way is equivalent to hypothesis testing, and that we should use that framework to help determine the criteria; but we also know that this approach doen't perform well when there are several criteria to be combined. Others have proposed combining several criteria into a single measure by considering the implied power of the final study; and others still have suggested a Bayesian approach is sensible. We will apply the latter two points to the specific problem of recruitment considered here, proposing a Bayesian model which can use the pilot data to make predictions about the final sample size of the trial.
+Progression decisions are often made using pre-specified progression criteria, with some funders suggesting the form these should take - e.g. NIHR. Some have argued that making decisions this way is equivalent to hypothesis testing, and that we should use that framework to help determine the criteria; but we also know that this approach doesn't perform well when there are several criteria to be combined. Others have proposed combining several criteria into a single measure by considering the implied power of the final study; and others still have suggested a Bayesian approach is sensible. We will apply the latter two points to the specific problem of recruitment considered here, proposing a Bayesian model which can use the pilot data to make predictions about the final sample size of the trial.
 
 Several models of trial recruitment have been proposed. The Poisson-Gamma model has been validated, and so we will take a similar hierarchical approach supplemented by a model for site setup.
 
@@ -29,9 +29,9 @@ Note that GUSTO recruits participants who are then allocated into one of three s
 
 We follow others and use a hierarchical model for recruitment, although we use the linear mixed poisson regression model (as opposed to Poisson-Gamma) as this is easier for the user to implement in R via `brms`. We also use a Poisson model for rate at which sites are opened.
 
-We fit this model in a Bayesian framework. Given an approiate joint prior for the model parameters (see below), we can take the fitted model and produce an estimated posterior predictive distribution of the final sample size in the trial, or, equivalently, of the final power.
+We fit this model in a Bayesian framework. Given an appropriate joint prior for the model parameters (see below), we can take the fitted model and produce an estimated posterior predictive distribution of the final sample size in the trial, or, equivalently, of the final power.
 
-To illustrate out approach, we can simulate some data from a trial based on the GUSTO example, recording both the final sample size and the internal pilot data. Note that we cap the total recruitment at the GUSTO target of 320 participants, and recruit for three years.
+To illustrate our approach, we can simulate some data from a trial based on the GUSTO example, recording both the final sample size and the internal pilot data. Note that we cap the total recruitment at the GUSTO target of 320 participants, and recruit for three years.
 
 ```{r}
 library(ggplot2)
@@ -110,12 +110,12 @@ set.seed(3465785)
 sim <- sim_rec_setup(m=20, int_t=int_t, 
                      beta_m = beta_m, beta_s = beta_s, v_df = v_df, v_sc = v_sc, 
                      setup_r_a=setup_r_a, setup_r_b=setup_r_b)
-sim
+sim$data
 ```
 
 In our simulated example, we have seven sites opened by time $t_p = 0.5$ years and have recruited eight participants from those sites - with 2 sites not actually recruiting anyone by that point. The first site opened at around 0.1 years into the trial, while the seventh opened at around 0.435 years.
 
-To choose the priors we can simulate the true recruitment rates they imply and check these are realistic. Recall that for GUSTO, the aim (for one of the gene expression subtypes) is to recruit 60 patients, randomise then, and then do a single arm analysis in the treatment arm. They anticipated recruiting 13 patients per month when all 20 centres are open - so an overall rate of 7.8 eligible patients per site per year.
+To choose the priors we can simulate the true recruitment rates they imply and check these are realistic. Recall that for GUSTO, the aim (for one of the gene expression subtypes) is to recruit 60 patients, randomise them, and then do a single arm analysis in the treatment arm. They anticipated recruiting 13 patients per month when all 20 centres are open - so an overall rate of 7.8 eligible patients per site per year.
 
 ```{r}
 # Prior hyperparameters
@@ -166,7 +166,7 @@ hist(pows)
 
 Our prior implies that, before we see any pilot recruitment data, our best guess of the final trial's power is around 0.67 and we think there's a probability of around 0.33 that the power will end up less than 0.6. This seems like a reasonable prior, implying enough uncertainty around final power as to motivate an internal pilot.
 
-We fit a Bayesian model to the pilot data using `brms`. The best way to do this is first set up an empty model, which we can then call any time we have data to analyse. Note that our analysis model includes the same prior that we used to simulate the data - the relative merits of using a different prior at analsysis, and in particular a less informative prior, will be discussed later.
+We fit a Bayesian model to the pilot data using `brms`. The best way to do this is to first set up an empty model, which we can then call any time we have data to analyse. Note that our analysis model includes the same prior that we used to simulate the data - the relative merits of using a different prior at analysis, and in particular a less informative prior, will be discussed later.
 
 ```{r}
 int_data <- sim$data
@@ -392,35 +392,35 @@ names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
 int_t <- 0.5
 r <- as.data.frame(t(replicate(10^4, sim_decision())))
 names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
-saveRDS(r, "test_r_6.rds")
+#saveRDS(r, "test_r_6.rds")
 
 int_t <- 1
 r <- as.data.frame(t(replicate(10^4, sim_decision())))
 names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
-saveRDS(r, "test_r_12.rds")
+#saveRDS(r, "test_r_12.rds")
 
 int_t <- 1.5
 r <- as.data.frame(t(replicate(10^4, sim_decision())))
 names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
-saveRDS(r, "test_r_18.rds")
+#saveRDS(r, "test_r_18.rds")
 
 int_t <- 2
 r <- as.data.frame(t(replicate(10^4, sim_decision())))
 names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
-saveRDS(r, "test_r_24.rds")
+#saveRDS(r, "test_r_24.rds")
 
 int_t <- 2.5
 r <- as.data.frame(t(replicate(10^4, sim_decision())))
 names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
-saveRDS(r, "test_r_30.rds")
+#saveRDS(r, "test_r_30.rds")
 ```
 
-Now plot the data in the pilot sample space, flagging first if it is feasible (i.e. has an eventual power greater than 0.65) and then flagginf the decision made when applying the Bayesian decision rule:
+Now plot the data in the pilot sample space, flagging first if it is feasible (i.e. has an eventual power greater than 0.65) and then flagging the decision made when applying the Bayesian decision rule:
 
 ```{r}
 df <- readRDS("test_r_6.rds")
 
-thr <- 0.65
+thr <- 0.75
 
 # Classify final sample sizes as feasible or not
 df$feas <- df$pow > thr
@@ -500,11 +500,13 @@ ocs2 <- data.frame(sens = -opt$value[,1],
 ocs2 <- rbind(ocs2, ocs[,2:4])
 
 ggplot(ocs2, aes(sens, spec, linetype = t)) + geom_line() +
+  #geom_point(data=data.frame(sens = 0.8285714, spec = 0.6179104, t = "PC")) +
+  geom_point(data = ocs[ocs$thr == thr,]) +
   xlab("Sensitivity") + ylab("Specificity") + 
   theme_minimal()
 ```
 
-So we see that, in this example at least, standard progression criteria are dominated by the Bayesian pre-specified decision rule in terms of sensitivity and specificity. We can look at the Pareto set of progression criteria:
+So we see that, in this example at least, standard progression criteria are dominated by the Bayesian pre-specified decision rule in terms of sensitivity and specificity - though there is not a lot in it. We can look at the Pareto set of progression criteria:
 
 ```{r}
 head(opt$par)
@@ -521,10 +523,26 @@ opt$par[index,]
 ```
 So the PC rule which gives us the most similar performance to the optimal Bayesian rule involves a negligible component for site openings which will almost always be met and is therefore redundant. It's hard to see how we could find this rule, or another efficient rule with a different balance of sensitivity and specificity, manually.
 
+To understand if it's worth trying to eye ball it, we could take one of these efficient rules and see how sens and spec change as we deviate from the optimal thresholds:
+
+```{r}
+pc <- opt$par[index,]
+sens_analysis <- NULL
+all_pc <- NULL
+for(i in 1:10^3){
+  pc_sens <- pc*runif(3, 0.5, 2)
+  all_pc <- rbind(all_pc, pc_sens)
+  sens_analysis <- rbind(sens_analysis, -get_pc_ocs(pcs = pc_sens, df = df))
+}
+plot(sens_analysis)
+```
+
 We can also compare rules with respect to expected utility. Setting a particular threshold $x$ for our Bayesian decision rule, then we are acting as if to maximise the expectation of
+
 $$
 u(1-\beta) = [1 - \beta] - x,
 $$
+
 where $u = 0$ if we stop the study. Given this, we can estimate the expected utility of any rule by simulating lots of data, applying the rule to the pilot part each time, noting the decision, and then finding the corresponding utility and averaging these. For example, suppose we use a threshold value of $x = 0.65$ as before:
 
 ```{r}
@@ -552,7 +570,7 @@ opt$par
 mean((df$pow - thr)*df$go) - (-opt$value)
 ```
 
-This PC rule rounds done to progressing if we have >0 sites and >2 participants, in a sense the best approximation fo the true optimal rule, and gives a very similar expected utility. Unlike the PC rule above it now has a site component which will factor in some cases, but now does not have a meaningful rate component. Again, it is not clear how we would go about finding such a rule given the current methods for progression criteria.
+This PC rule rounds done to progressing if we have >0 sites and >4 participants, in a sense the best approximation fo the true optimal rule, and gives a very similar expected utility. Unlike the PC rule above it now has a site component which will factor in some cases, but now does not have a meaningful rate component. Again, it is not clear how we would go about finding such a rule given the current methods for progression criteria.
 
 We can plot this decision rule in the sample space and compare it against the Bayes rule:
 
@@ -572,17 +590,25 @@ ggplot(df, aes(pow, avg_pow, colour = go_pc == go)) + geom_point(alpha = 0.3)
 
 # Plot PC thresholds over the Bayes decisions in the pilot sample space
 ggplot(df[df$n_p < 500,], aes(m_p, n_p, colour = go)) + geom_jitter(alpha = 0.3) +
-  geom_hline(yintercept = opt$par[2]) +
-  geom_vline(xintercept = opt$par[1]) + 
+  geom_hline(yintercept = floor(opt$par[2])) +
+  geom_vline(xintercept = floor(opt$par[1])) + 
   geom_abline(slope = opt$par[3]) +
   ylab("Particpants recruited") + xlab("Sites opened") +
   scale_colour_discrete(name = "Bayes decision", labels = c("Stop", "Go")) +
   theme_minimal()
 ```
 
-The optimal progression criteria rule corresponds fairly well with the optimal Bayes rule.
+Note that the rate component rarely bites here:
 
-Finally, we can look at our motivating example. The progression criteria there are to stop if < 3 sites are open AND if <= 10 participants are recruited - note that this has a different form to the rules above, which specified that all criteria must be met to proceed.
+```{r}
+nrow(df[df$m_p > floor(opt$par[1]) & df$n_p > floor(opt$par[2]) & df$rate <= opt$par[3],])
+```
+That is, in our sample of 1000 we only have one case which passes the site number and participant number PC but then fails due to the rate PC. So this PC is also negligible (alongside the site PC), and we effectively have an "optimal" PC with a single component - proceed if we 5 or more participants recruited at 6 months. The OCs of this rule are:
+
+```{r}
+get_pc_ocs(c(0,4,0), df)
+```
+We plot this in our earlier OC graph as a single point. Finally, we can look at our motivating example. The progression criteria there are to stop if < 3 sites are open AND if <= 10 participants are recruited - note that this has a different form to the rules above, which specified that all criteria must be met to proceed.
 
 ```{r}
 df$go_ex <- df$m_p > 2 | df$n_p > 10
@@ -881,16 +907,19 @@ ggplot(ss, aes(n_p, alc, colour = m_p)) + geom_point()
 
 We have shown elsewhere that allowing for adjustments is not really feasible under a frequentest paradigm, and in particular will require the effect of an adjustment to be known at the design stage. One potential benefit of the Bayesian approach is that we don't need to tie ourselves to pre-specified rules, and can instead just model the effect of adjustment and incorporate this into our predictive power distribution. 
 
-We could illustrate this easily. We could also explore a backwards approach where we ask what kind of adjustment would be necessary to bump the trial up into feasible territory - then, rather than eliciting a distribution for the effect, we only need to argue it will lie in a certain space.
+We could illustrate this easily. We could also explore a backwards approach where we ask what kind of adjustment would be necessary to bump the trial up into feasible territory - then, rather than eliciting a distribution for the effect, we only need to argue it will lie in a certain space. Further extension could look at extending the pilot trial to evaluate the adjustment - how much more data would we need to be sure it has worked?
 
 ## Discussion
 
 ### Conclusions
 
-- A hierarchical Bayesian approach to modelling recruitment lets us easily generate a predictive distribution of final power, incorporating what the pilot data tells us about average recruitment rates, variability in recruitment rates, and the rate of site opening. This gives us a natural basis for discussions and decisions around trial progression. It also facilitates incorporation of other information, both historical / expert knowledge on likely recruitment but also post-pilot beliefs regarding the effect of any adjustments designed to improve recruitment rates.
-- We can design the pilot by considering the average length of the predictive posterior credible interval, to make sure we will have enough data to make a well-informed decision.
-- If required, we can pre-specify decision rules which use the average predicted power to determine if we should stop or go; and can calibrate these rules using metrics like sensitivity and specificity.
-- Our framework also lets us examine decision rules which take for form of standard progression criteria and to optimise these if, for example, a funder requires rules in that format.
+A hierarchical Bayesian approach to modelling recruitment lets us easily generate a predictive distribution of final power, incorporating what the pilot data tells us about average recruitment rates, variability in recruitment rates, and the rate of site opening. This gives us a natural basis for discussions and decisions around trial progression. It also facilitates incorporation of other information, both historical / expert knowledge on likely recruitment but also post-pilot beliefs regarding the effect of any adjustments designed to improve recruitment rates.
+
+We can design the pilot by considering the average length of the predictive posterior credible interval, to make sure we will have enough data to make a well-informed decision.
+
+If required, we can pre-specify decision rules which use the average predicted power to determine if we should stop or go; and can calibrate these rules using metrics like sensitivity and specificity.
+
+Our framework also lets us examine decision rules which take for form of standard progression criteria and to optimise these if, for example, a funder requires rules in that format. And in our example, we found that these types of decision rules can be quite close to optimal, though potentially with some redundancy.
 
 ### Further work
 
@@ -904,7 +933,7 @@ The hierarchical recruitment model we use here has been previously calibrated ag
 
 Use these problems to also explore using methods like random forest, SVMs and neural networks to find decision regions - simulating data, classify each data by the optimal decision, and then apply these classifiers, both of which should cope well in high dimensions, to find the optimal critical region.
 
-Note that SVMs in particular might help with the probalem of uninformative priors leading to a very wide distribution of the data, since the focus will be on the middle. But also, centering and normalising the data features could fix that for the GAM approach.
+Note that SVMs in particular might help with the problem of uninformative priors leading to a very wide distribution of the data, since the focus will be on the middle. But also, centering and normalising the data features could fix that for the GAM approach.
 
 Application here could be fast calculation of Bayesian power (as basis for sample size in a Bayesian analysis); especially if we are arguing that power represents a sensible value function, as in rove.
 
