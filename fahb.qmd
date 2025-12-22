@@ -367,6 +367,7 @@ sim_decision <- function(){
   
   n_p <- sum(int_data$y)
   m_p <- nrow(int_data)
+  rate <- n_p / sum(int_data$t)
   
   pred_n <- interim(sim)
   
@@ -375,6 +376,7 @@ sim_decision <- function(){
            mean(sapply(pred_n/2, power.ahern)),
            m_p,
            n_p,
+           rate,
            sim$end_n))
 }
 ```
@@ -385,7 +387,7 @@ Simulate some data for a range of internal pilot lengths:
 int_t <- 0.5
 r <- as.data.frame(t(replicate(10^3, sim_decision())))
 names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
-#saveRDS(r, "test_r_6.rds")
+saveRDS(r, "test_r_6.rds")
 ```
 
 ```{r, eval = FALSE}
@@ -420,7 +422,7 @@ Now plot the data in the pilot sample space, flagging first if it is feasible (i
 ```{r}
 df <- readRDS("test_r_6.rds")
 
-thr <- 0.75
+thr <- 0.7
 
 # Classify final sample sizes as feasible or not
 df$feas <- df$pow > thr
@@ -446,21 +448,26 @@ Keeping our definition of feasibility fixed at 0.65, we can change the decision 
 ```{r}
 get_ocs <- function(thr, df){
   
-  go <- df$avg_pow > thr
-  sens <- sum(go[df$feas])/sum(df$feas)
-  spec <- sum(!go[!df$feas])/sum(!df$feas)
+  go <- df$avg_pow >= thr
   
-  return(c(sens, spec))
+  fpr <- sum(go[!df$feas])/sum(!df$feas)
+  fnr <- sum(!go[df$feas])/sum(df$feas)
+  
+  #sens <- 1 - sum(go[df$feas])/sum(df$feas)
+  #spec <- 1 - sum(!go[!df$feas])/sum(!df$feas)
+  #return(c(sens, spec))
+  return(c(fpr, fnr))
 }
 
 ocs <- data.frame(thr = seq(0, 1, 0.01))
 ocs <- cbind(ocs, t(sapply(ocs$thr, get_ocs, df=df)))
-names(ocs)[2:3] <- c("sens", "spec") 
+names(ocs)[2:3] <- c("fpr", "fnr") 
 
-ggplot(ocs, aes(sens, spec, colour = thr)) + geom_line() +
-  xlab("Sensitivity") + ylab("Specificity") + 
+ggplot(ocs, aes(fpr, fnr, colour = thr)) + geom_line() +
+  xlab("False positive rate") + ylab("False negative rate") + 
   scale_color_continuous(name = "Threshold", type = "viridis") +
   geom_point(data = ocs[ocs$thr == thr,]) +
+  coord_fixed() +
   theme_minimal()
 ```
 
@@ -478,9 +485,9 @@ df$rate <- df$n_p/df$m_p
 get_pc_ocs <- function(pcs, df){
   
   go <- df$m_p > pcs[1] & df$n_p > pcs[2] & df$rate > pcs[3]
-  sens <- sum(go[df$feas])/sum(df$feas)
-  spec <- sum(!go[!df$feas])/sum(!df$feas)
-  return(-c(sens, spec))
+  fpr <- sum(go[!df$feas])/sum(!df$feas)
+  fnr <- sum(!go[df$feas])/sum(df$feas)
+  return(c(fpr, fnr))
 }
 
 library(mco)
@@ -493,16 +500,17 @@ opt <- nsga2(get_pc_ocs, 3, 2,
 
 ocs$t <- "Bayes"
 
-ocs2 <- data.frame(sens = -opt$value[,1],
-                   spec = -opt$value[,2],
+ocs2 <- data.frame(fpr = opt$value[,1],
+                   fnr = opt$value[,2],
                    t = "PC")
 
 ocs2 <- rbind(ocs2, ocs[,2:4])
 
-ggplot(ocs2, aes(sens, spec, linetype = t)) + geom_line() +
-  #geom_point(data=data.frame(sens = 0.8285714, spec = 0.6179104, t = "PC")) +
+ggplot(ocs2, aes(fpr, fnr, linetype = t)) + geom_line() +
+  xlab("False positive rate") + ylab("False negative rate") + 
   geom_point(data = ocs[ocs$thr == thr,]) +
-  xlab("Sensitivity") + ylab("Specificity") + 
+  scale_linetype(name = "Method") + 
+  coord_fixed() +
   theme_minimal()
 ```
 
@@ -634,6 +642,192 @@ ggplot(df[df$n_p < 500,], aes(m_p, n_p, colour = go)) + geom_jitter(alpha = 0.3)
 ```
 
 In this case, the PC does not agree particularly well with the optimal Bayes rule. But this is all for a particular prior and a particular threshold, which may be quite different to what the investigators had in mind when determining their progression criteria.
+
+## Simulation study
+
+Our illustrative example suggests that standard recruitment PCs can be near optimal. They can also be found quickly (constrasting with the Bayesian approach which requires nested MCMC or an approximation), so we might conclude that these should be used. We therefore want to examine if this general near optimality holds across a broad range of scenarios. As an aside, we'd also like to understand if the kind of redundancy we've seen in the example is common.
+
+We will conduct a simulation study. A scenario will be defined by: a prior; a feasibility threshold (which we will specify in terms of time to target recruitment); a target sample size; and a timing of interim analysis (as a proportion of the expected time to target recruitment). Within each scneario we will run the full Bayes analysis, and from this we will get the optimal FNR at a range of nominal FPRs. We will then look at each FPR and find the best FNR possible through standard PCs. The contrast of these FNRs will be our key metric.
+
+First, a new version of the simulation to allow for recruiting until the target sample size and returning the recruitment time:
+
+```{r}
+sim_rec_setup_eval <- function(m, int_t, target_n, 
+                               beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b) {
+  # m - total number of sites to be set up
+  # int_t - time of interim analysis (years)
+  # target_n - target recruitment, which we will cap at
+  # beta_m, beta_s - hyperparameters for the (normal) prior on beta_0
+  # v_df, v_sc = hyperparameters for the (half scaled t) prior on signa^2
+  # setup_r_a, _b - hyperparameters for site set up rate (per year)
+  
+  # First, get the expected recruitment 
+  
+  end_rec <- 10 # Length of recruitment period in years
+  
+  # True per year recruitment rates for each site
+  # Sample beta_0 from prior
+  beta_0 <- rnorm(1, mean = beta_m, sd = beta_s)
+  # Sample var from prior
+  var_l <- abs(rlst(1, df = v_df, mu = 0, sigma = v_sc))^2
+  
+  lambdas <- exp(rnorm(m, beta_0, sqrt(var_l)))
+  
+  # True setup rate
+  setup_r <- rgamma(1, setup_r_a, setup_r_b)
+  
+  # Setup times
+  setup_ts <- cumsum(rexp(m, setup_r))
+  
+  # Note how many sites are set up at interim
+  pilot_sites <- which(setup_ts <= int_t)
+  m_p <- length(pilot_sites)
+  
+  # Get the different recruitment rates over time
+  rec_rates <- matrix(c(0, setup_ts,
+                        setup_ts, end_rec,
+                        0, cumsum(lambdas)), ncol = 3)
+  
+  # Simulate numbers recruited in each period
+  rec_rates <- cbind(rec_rates, c(0, rpois(m, (rec_rates[,3]*(rec_rates[,2] - rec_rates[,1]))[2:(m+1)])))
+  
+  # Get total number recruited at interim
+  # First get period where interim occurs
+  int_period <- which(rec_rates[,2] > int_t)[1]
+  # Now add n from previous periods and simulate interim period arrival times
+  n_p <- sum(rec_rates[1:(int_period-1), 4]) + 
+    sum(runif(rec_rates[int_period, 4], rec_rates[int_period, 1], rec_rates[int_period, 2]) < int_t)
+  # Distribute these participants to sites in proportion to their expected numbers
+  print(setup_ts[1:m_p])
+  n_ps <- rmultinom(1, n_p, prob = (int_t - setup_ts[1:m_p])*lambdas[1:m_p])
+  
+  # Get time at which total target n is hit
+  fin_period <- which(cumsum(rec_rates[,4]) > target_n)[1]
+  n_needed <- target_n - sum(rec_rates[1:(fin_period-1), 4])
+  rec_time <- rec_rates[fin_period, 1] + rgamma(1, shape = n_needed, rate = rec_rates[fin_period, 3])
+  
+  # Create a data frame storing the sites open at interim, the numbers 
+  # they each recruited, and how long they were recruiting for
+  if(m_p > 0){
+    df <- data.frame(y = n_ps[1:m_p],
+                   c = 1:m_p,
+                   t = int_t - setup_ts[1:m_p])
+  } else {
+    df <- data.frame(y = 0, c = 0, t = 0)
+  }
+  
+  # Output the actual interim data and the final period
+  # and some statistics of the pilot data
+  return(list(data = df, rec_time = rec_time))
+}
+
+# For example,
+sim <- sim_rec_setup_eval(m, int_t, target_n = 320, 
+                   beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b) 
+```
+
+Now, a routine to get the posterior expected recruitment time, given some simulated interim data:
+
+```{r}
+sim_end_time <- function(site_matrix, m, m_p, n_p, target_n){
+  end_rec <- 1000
+  
+  # Site matrix is built below. Each row is a posterior sample. The columns
+  # are the true site rates and the true site setup times, where 0 = end of interim
+  us <- site_matrix[1:m]; setup_ts <- site_matrix[(m+1):(2*m)]
+  # re-order
+  us <- us[order(setup_ts)]; setup_ts <- setup_ts[order(setup_ts)]
+  
+  rec_rates <- matrix(c(0, setup_ts,
+                        setup_ts, end_rec,
+                        0, cumsum(us)), ncol = 3)
+  
+  # Simulate numbers recruited in each period
+  rec_rates <- cbind(rec_rates, c(0, rpois(m, (rec_rates[,3]*(rec_rates[,2] - rec_rates[,1]))[2:(m+1)])))
+  # Get time at which total target n is hit
+  fin_period <- which(cumsum(rec_rates[,4]) > target_n)[1]
+  n_needed <- target_n - sum(rec_rates[1:(fin_period-1), 4])
+  rec_time <- rec_rates[fin_period, 1] + rgamma(1, shape = n_needed, rate = rec_rates[fin_period, 3])
+  
+  return(rec_time)
+}
+
+interim_eval <- function(sim){
+  
+  m <- 20
+  int_data <- sim$data
+  n_p <- sum(int_data$y)
+  m_p <- nrow(int_data)
+  
+  output <- capture.output(fit <- suppressWarnings(update(fit_empty, 
+                                                          recompile = FALSE, 
+                                                          newdata = int_data, 
+                                                          iter = 3000, 
+                                                          warmup = 500,
+                                                          control = list(adapt_delta = 0.95))))
+  
+  s <- as_draws(fit)
+  beta_0 <- extract_variable(s, "b_Intercept")
+  sd_r <- extract_variable(s, "sd_c__Intercept")
+  
+  if(m - m_p > 0){
+    
+    # Posterior predicted random effects for the non-pilot sites
+    us <- sapply(1:(m-m_p), function(x) exp(rnorm(length(beta_0), beta_0, sd_r)))
+    
+    # ...and for the sites included in the pilot
+    r <- ranef(fit, summary = F)
+    us <- cbind(us, exp(r$c[,1:m_p,1] + beta_0))
+  
+    # Conjugate analysis for site setups
+    setup_r_a1 <- setup_r_a + m_p
+    setup_r_b1 <- setup_r_b + int_t
+    
+    # Each column of u is a yearly rate at that site, each row a sample from the 
+    # posterior. Want to weight sites by the time they recruit for. For the first 
+    # m-m_p we need to simulate these times using our posterior.
+    
+    # First get true setup rate
+    setup_rates <- rgamma(nrow(us), setup_r_a1, setup_r_b1)
+    
+    # setup_times for sites not in the pilot
+    setup_times <- t(sapply(setup_rates, function(x) cumsum(rexp(m-m_p, x))))
+    
+    # Add pilot sites
+    setup_times <- cbind(setup_times, matrix(rep(0, m_p*nrow(us)), ncol = m_p))
+    
+    site_matrix <- cbind(us, setup_times)
+    
+    rec_times <- apply(site_matrix, 1, sim_end_time, 
+                       m=m, m_p=m_p, n_p=n_p, target_n=target_n)
+  }
+    
+  return(mean(rec_times))
+}
+
+# For example,
+interim_eval(sim)
+```
+
+Now we want to repeatedly simulate under a given scenario and return the Bayesian decision and the three components to be used in a standard PC analysis:
+
+```{r}
+scenario_sim <- function(m, int_t, target_n, 
+                         beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b){
+  
+  sim <- sim_rec_setup_eval(m, int_t, target_n,
+                   beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b) 
+  post_rec_time <- interim_eval(sim)
+  n_p <- sum(sim$data$y)
+  m_p <- nrow(sim$data)
+  rate <- n_p/m_p
+  
+  return(c(n_p, m_p, rate, post_rec_time, sim$rec_time))
+}
+
+df <- t(replicate(5, scenario_sim(m, int_t, target_n, 
+             beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b)))
+```
 
 ## Extensions
 
