@@ -347,7 +347,7 @@ In principle we don't need to pre-specify a decision rule which dictates if we s
 What threshold should we use in such a rule? One way to approach this question is to think about power as a utility measure, in which case average power becomes expected utility. From this perspective we may be able to identify a specific level of power such that, if we knew that was what we will get in the final analysis, we would be indifferent between stopping or continuing the trial. For example, suppose we would be indifferent between stopping and continuing on to a final analysis of 0.65 power. What would this decision rule look like? We can get an idea by simulating lots of data and applying this rule each time.
 
 ```{r}
-sim_decision <- function(){
+sim_decision <- function(int_t){
   
   m <- 20
   sim <- sim_rec_setup(m=m, int_t=int_t,
@@ -367,13 +367,15 @@ sim_decision <- function(){
   
   n_p <- sum(int_data$y)
   m_p <- nrow(int_data)
-  rate <- n_p / sum(int_data$t)
+  rate <- 0
+  if(sum(int_data$t) > 0) rate <- n_p / sum(int_data$t)
   
   pred_n <- interim(sim)
   
-  return(c(power.ahern(sim$end_n/2), 
-           mean(pred_n > 186),
-           mean(sapply(pred_n/2, power.ahern)),
+  return(c(#power.ahern(sim$end_n/2), 
+           #mean(pred_n > 186),
+           #mean(sapply(pred_n/2, power.ahern)),
+           mean(pred_n),
            m_p,
            n_p,
            rate,
@@ -384,9 +386,13 @@ sim_decision <- function(){
 Simulate some data for a range of internal pilot lengths:
 
 ```{r, eval = FALSE}
-int_t <- 0.5
-r <- as.data.frame(t(replicate(10^3, sim_decision())))
-names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
+ptm <- proc.time()
+r <- t(replicate(10^3, sim_decision(int_t = 0.5)))
+proc.time() - ptm
+
+r <- as.data.frame(r)
+proc.time() - ptm
+names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "rate", "end_n")
 saveRDS(r, "test_r_6.rds")
 ```
 
@@ -645,9 +651,9 @@ In this case, the PC does not agree particularly well with the optimal Bayes rul
 
 ## Simulation study
 
-Our illustrative example suggests that standard recruitment PCs can be near optimal. They can also be found quickly (constrasting with the Bayesian approach which requires nested MCMC or an approximation), so we might conclude that these should be used. We therefore want to examine if this general near optimality holds across a broad range of scenarios. As an aside, we'd also like to understand if the kind of redundancy we've seen in the example is common.
+Our illustrative example suggests that standard recruitment PCs can be near optimal. They can also be found quickly (contrasting with the Bayesian approach which requires nested MCMC or an approximation), so we might conclude that these should be used. We therefore want to examine if this general near optimality holds across a broad range of scenarios. As an aside, we'd also like to understand if the kind of redundancy we've seen in the example is common.
 
-We will conduct a simulation study. A scenario will be defined by: a prior; a feasibility threshold (which we will specify in terms of time to target recruitment); a target sample size; and a timing of interim analysis (as a proportion of the expected time to target recruitment). Within each scneario we will run the full Bayes analysis, and from this we will get the optimal FNR at a range of nominal FPRs. We will then look at each FPR and find the best FNR possible through standard PCs. The contrast of these FNRs will be our key metric.
+We will conduct a simulation study. A scenario will be defined by: a prior; a feasibility threshold (which we will specify in terms of time to target recruitment); a target sample size; and a timing of interim analysis (as a proportion of the expected time to target recruitment). Within each scenario we will run the full Bayes analysis, and from this we will get the optimal FNR at a range of nominal FPRs. We will then look at each FPR and find the best FNR possible through standard PCs. The contrast of these FNRs will be our key metric.
 
 First, a new version of the simulation to allow for recruiting until the target sample size and returning the recruitment time:
 
