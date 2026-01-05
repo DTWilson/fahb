@@ -357,9 +357,8 @@ sim_decision <- function(int_t){
   
   # Dealing with cases where no sites are recruited by interim 
   if(identical(int_data$c, 0)){
-      return(c(power.ahern(sim$end_n/2),
+      return(c(0,
            0, 
-           0,
            0,
            0,
            sim$end_n))
@@ -392,7 +391,7 @@ proc.time() - ptm
 
 r <- as.data.frame(r)
 proc.time() - ptm
-names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "rate", "end_n")
+names(r) <- c("mean_n", "m_p", "n_p", "rate", "end_n")
 saveRDS(r, "test_r_6.rds")
 ```
 
