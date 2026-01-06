@@ -427,13 +427,13 @@ Now plot the data in the pilot sample space, flagging first if it is feasible (i
 ```{r}
 df <- readRDS("test_r_6.rds")
 
-thr <- 0.7
+thr <- 200
 
 # Classify final sample sizes as feasible or not
-df$feas <- df$pow > thr
+df$feas <- df$end_n > thr
 
 # Find the decision using the pre-specified rule
-df$go <- df$avg_pow > thr
+df$go <- df$mean_n > thr
 
 # Plot the feasibility of simulations in the sample space
 ggplot(df[df$n_p < 500,], aes(m_p, n_p, colour = feas)) + geom_jitter(alpha = 0.3) +
@@ -689,21 +689,22 @@ sim_rec_setup_eval <- function(m, int_t, target_n,
   m_p <- length(pilot_sites)
   
   # Get the different recruitment rates over time
+  # Each row is a recruitment period, changing when a site comes online
+  # Columns are start times, end times, and true overall recruitment rates
   rec_rates <- matrix(c(0, setup_ts,
                         setup_ts, end_rec,
                         0, cumsum(lambdas)), ncol = 3)
   
-  # Simulate numbers recruited in each period
+  # Simulate numbers recruited in each period and add these as a column
   rec_rates <- cbind(rec_rates, c(0, rpois(m, (rec_rates[,3]*(rec_rates[,2] - rec_rates[,1]))[2:(m+1)])))
   
   # Get total number recruited at interim
-  # First get period where interim occurs
+  # First get period (row in matrix) where interim occurs
   int_period <- which(rec_rates[,2] > int_t)[1]
   # Now add n from previous periods and simulate interim period arrival times
   n_p <- sum(rec_rates[1:(int_period-1), 4]) + 
     sum(runif(rec_rates[int_period, 4], rec_rates[int_period, 1], rec_rates[int_period, 2]) < int_t)
   # Distribute these participants to sites in proportion to their expected numbers
-  print(setup_ts[1:m_p])
   n_ps <- rmultinom(1, n_p, prob = (int_t - setup_ts[1:m_p])*lambdas[1:m_p])
   
   # Get time at which total target n is hit
