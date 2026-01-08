@@ -1,0 +1,8 @@
+name: R_env_general
+
+dependencies:
+  - r-base
+  - r-stats
+  - r-brms
+  - r-extraDistr
+  - r-posterior
