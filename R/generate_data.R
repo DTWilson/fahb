@@ -1,4 +1,4 @@
-library(extraDistr)
+#library(extraDistr)
 
 generate_data <- function(m, int_t, target_n, 
                                beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b) {
