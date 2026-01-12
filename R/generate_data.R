@@ -28,8 +28,9 @@ generate_data <- function(m, int_t, target_n,
   setup_ts <- cumsum(rexp(m, setup_r))
   
   # Note how many sites are set up at interim
-  pilot_sites <- which(setup_ts <= int_t)
-  m_p <- length(pilot_sites)
+  #pilot_sites <- which(setup_ts <= int_t)
+  #m_p <- length(pilot_sites)
+  m_p <- sum(setup_ts <= int_t)
   
   # Get the different recruitment rates over time
   ## Each row is a recruitment period, changing when a site comes online
@@ -44,18 +45,6 @@ generate_data <- function(m, int_t, target_n,
   ## Now sample from a Poisson for each period
   rec_rates <- cbind(rec_rates, c(0, rpois(m, exp_rec)))
   
-  # Get total number recruited at interim
-  ## First get period (row in matrix) where interim occurs
-  int_period <- which(rec_rates[,2] > int_t)[1]
-  ## Start with the number recruited from all previous periods
-  n_p <- sum(rec_rates[1:(int_period-1), 4])
-  ## Simulate the extra number recruited in the final period, using the fact
-  ## that arrivals will be uniformly distributed over the period
-  n_p <- n_p +  sum(runif(rec_rates[int_period, 4], rec_rates[int_period, 1], rec_rates[int_period, 2]) < int_t)
-  ## Distribute these participants to sites in proportion to their expected
-  ## numbers, given their true rates and times open
-  n_ps <- rmultinom(1, n_p, prob = (int_t - setup_ts[1:m_p])*lambdas[1:m_p])
-  
   # Get time at which total target n is hit
   ## First get the period when it happens
   fin_period <- which(cumsum(rec_rates[,4]) > target_n)[1]
@@ -64,9 +53,22 @@ generate_data <- function(m, int_t, target_n,
   ## Simulate when the target is hit, which follows a gamma distribution
   rec_time <- rec_rates[fin_period, 1] + rgamma(1, shape = n_needed, rate = rec_rates[fin_period, 3])
   
-  # Create a data frame storing the sites open at interim, the numbers 
-  # they each recruited, and how long they were recruiting for
+  # Get total number recruited at interim
   if(m_p > 0){
+    ## First get period (row in matrix) where interim occurs
+    int_period <- which(rec_rates[,2] > int_t)[1]
+    ## Start with the number recruited from all previous periods
+    n_p <- sum(rec_rates[1:(int_period-1), 4])
+    ## Simulate the extra number recruited in the final period, using the fact
+    ## that arrivals will be uniformly distributed over the period
+    n_p <- n_p +  sum(runif(rec_rates[int_period, 4], rec_rates[int_period, 1], rec_rates[int_period, 2]) < int_t)
+    ## Distribute these participants to sites in proportion to their expected
+    ## numbers, given their true rates and times open
+    n_ps <- rmultinom(1, n_p, prob = (int_t - setup_ts[1:m_p])*lambdas[1:m_p])
+    
+    # Create a data frame storing the sites open at interim, the numbers 
+    # they each recruited, and how long they were recruiting for
+  
     df <- data.frame(y = n_ps[1:m_p],
                      c = 1:m_p,
                      t = int_t - setup_ts[1:m_p])
