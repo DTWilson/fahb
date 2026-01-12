@@ -1,10 +1,9 @@
 
 PC_OCs <- function(scenario){
   # scenario is an integer ID
-  # This function combines all HPC data for the scenario of interest
-  # and then finds efficient (Pareto optimal) decision rules of the standard
-  # PC form. Rules are evaluated w.r.t. their FPR and FNR, as defined by 
-  # the threshold feasibility of that scenario.
+  # This function finds efficient (Pareto optimal) decision rules of the 
+  # standard PC form. Rules are evaluated w.r.t. their FPR and FNR, as defined 
+  # by the threshold feasibility of that scenario.
   # Returns a list of a reduced summary of the Pareto front, and a vector
   # describing the extenet of redundancy in the full set of efficient 
   # solutions. 
