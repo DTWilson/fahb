@@ -11,7 +11,7 @@ generate_data <- function(m, int_t, target_n,
   # setup_r_a, _b - hyperparameters for (gamma) prior on yearly site set up rate
   
   # Max length of recruitment period in years (pretty arbitrary)
-  end_rec <- 10 
+  end_rec <- 10
   
   # True per year recruitment rates for each site
   ## Sample beta_0 from prior
@@ -47,7 +47,17 @@ generate_data <- function(m, int_t, target_n,
   
   # Get time at which total target n is hit
   ## First get the period when it happens
-  fin_period <- which(cumsum(rec_rates[,4]) > target_n)[1]
+  ## If it is not hit in the (arbitrary) 10 year period, add another period for 
+  ## the remainder
+  if(sum(rec_rates[,4]) < target_n){
+    # Recruit to target in the final period
+    rec_rates <- rbind(rec_rates,
+                       c(rec_rates[m+1, 2],
+                         rec_rates[m+1, 2], 
+                         rec_rates[m+1, 3],
+                         target_n - sum(rec_rates[,4])))
+  }
+  fin_period <- which(cumsum(rec_rates[,4]) >= target_n)[1]
   ## Determine how many people need to arrive in that final period
   n_needed <- target_n - sum(rec_rates[1:(fin_period-1), 4])
   ## Simulate when the target is hit, which follows a gamma distribution
