@@ -1,13 +1,13 @@
 #library(extraDistr)
 
 generate_data <- function(m, int_t, target_n, 
-                               beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b) {
+                               beta_m, beta_s, v_sh, v_r, setup_r_a, setup_r_b) {
   
   # m - total number of sites to be set up
   # int_t - time of interim analysis (years)
   # target_n - target recruitment, which we will cap at
   # beta_m, beta_s - hyperparameters for the (normal) prior on beta_0
-  # v_df, v_sc = hyperparameters for the (half scaled t) prior on var_l
+  # v_sh, v_r = hyperparameters for the gamma prior on sqrt(var_l)
   # setup_r_a, _b - hyperparameters for (gamma) prior on yearly site set up rate
   
   # Max length of recruitment period in years (pretty arbitrary)
@@ -17,7 +17,8 @@ generate_data <- function(m, int_t, target_n,
   ## Sample beta_0 from prior
   beta_0 <- rnorm(1, mean = beta_m, sd = beta_s)
   ## Sample var_l from prior
-  var_l <- abs(rlst(1, df = v_df, mu = 0, sigma = v_sc))^2
+  #var_l <- abs(rlst(1, df = v_df, mu = 0, sigma = v_sc))^2
+  var_l <- rgamma(1, shape = v_sh, rate = v_r)^2
   ## Sample the site rates from a log-normal 
   lambdas <- exp(rnorm(m, beta_0, sqrt(var_l)))
   
@@ -90,5 +91,5 @@ generate_data <- function(m, int_t, target_n,
   # Output the interim data and the time to reach target n
   return(list(data = df, rec_time = rec_time))
   
-  #generate_data(m=20, int_t=0.5, target_n=300, beta_m=1.75, beta_s=0.3, v_df=10, v_sc=0.4, setup_r_a=10, setup_r_b=1)
+  #generate_data(m=20, int_t=0.5, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=10, v_r=3.3, setup_r_a=10, setup_r_b=1)
 }
