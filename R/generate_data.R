@@ -7,7 +7,7 @@ generate_data <- function(m, int_t, target_n,
   # int_t - time of interim analysis (years)
   # target_n - target recruitment, which we will cap at
   # beta_m, beta_s - hyperparameters for the (normal) prior on beta_0
-  # v_sh, v_r = hyperparameters for the gamma prior on sqrt(var_l)
+  # v_sh, v_r = hyperparameters for the gamma prior on sd_l
   # setup_r_a, _b - hyperparameters for (gamma) prior on yearly site set up rate
   
   # Max length of recruitment period in years (pretty arbitrary)
@@ -18,9 +18,9 @@ generate_data <- function(m, int_t, target_n,
   beta_0 <- rnorm(1, mean = beta_m, sd = beta_s)
   ## Sample var_l from prior
   #var_l <- abs(rlst(1, df = v_df, mu = 0, sigma = v_sc))^2
-  var_l <- rgamma(1, shape = v_sh, rate = v_r)^2
+  sd_l <- rgamma(1, shape = v_sh, rate = v_r)
   ## Sample the site rates from a log-normal 
-  lambdas <- exp(rnorm(m, beta_0, sqrt(var_l)))
+  lambdas <- exp(rnorm(m, beta_0, sd_l))
   
   # True setup rate, from the prior
   setup_r <- rgamma(1, setup_r_a, setup_r_b)

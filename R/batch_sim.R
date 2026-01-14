@@ -43,7 +43,7 @@ bayes_model <- brm(y | rate(t) ~ 1 + (1 | c), data = int_data, family = poisson(
 
 res <- NULL
 for(i in 1:N){
-  x <- generate_data(m, int_t, target_n, beta_m, beta_s, v_df, v_sc, setup_r_a, setup_r_b)
+  x <- generate_data(m, int_t, target_n, beta_m, beta_s, v_sh, v_r, setup_r_a, setup_r_b)
   
   int_data <- x[[1]]
   rec_time <- x[[2]]

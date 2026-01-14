@@ -75,23 +75,23 @@ Now `sqrt(var_l)`:
 ```{r}
 library(extraDistr)
 
-# Low expectation, low variance
-v_sh <- 50; v_r <- v_sh/1
+# Low expectation (0.05), low variance
+v_sh <- 100; v_r <- v_sh/0.05
 v_r
 v_sh/v_r; sqrt(v_sh/(v_r^2))
 
 # Low expectation, high variance
-v_sh <- 10; v_r <- v_sh/1
+v_sh <- 5; v_r <- v_sh/0.05
 v_r
 v_sh/v_r; sqrt(v_sh/(v_r^2))
 
-# High expectation, low variance
-v_sh <- 450; v_r <- v_sh/3
+# High expectation (0.3), low variance
+v_sh <- 500; v_r <- v_sh/0.3
 v_r
 v_sh/v_r; sqrt(v_sh/(v_r^2))
 
 # High expectation, high variance
-v_sh <- 90; v_r <- v_sh/3
+v_sh <- 30; v_r <- v_sh/0.3
 v_r
 v_sh/v_r; sqrt(v_sh/(v_r^2))
 ```
