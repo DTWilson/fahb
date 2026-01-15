@@ -27,6 +27,7 @@ generate_data <- function(m, int_t, target_n,
   
   # Simulate setup times
   setup_ts <- cumsum(rexp(m, setup_r))
+  end_rec <- setup_ts[m] + 5
   
   # Note how many sites are set up at interim
   #pilot_sites <- which(setup_ts <= int_t)
