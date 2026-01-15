@@ -122,5 +122,46 @@ setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
 Now we put all these variations into a .csv file to be read in during the batch. Note we will replicate each scenario 10 times, running 10^4 simulations in each component.
 
 ```{r}
+m <- c(10, 30)
+int_t <- c(0.2, 0.5)
+target_n <- c(352,  788)
 
+rec_rate <- c(1,2)
+rec_v <- c(1,2)
+setup_r <- c(1,2)
+
+# First, make a matrix of values for the low prior uncertainty case
+
+low_unc <- expand.grid(m, int_t, target_n, rec_rate, rec_v, setup_r)
+low_unc$beta_m <- c(1.79, 2.994)[low_unc[,4]]
+low_unc$beta_s <- c(0.0593, 0.0588)[low_unc[,4]]
+low_unc$v_sh <- c(100, 500)[low_unc[,5]]
+low_unc$v_r <- c(2000, 1667)[low_unc[,5]]
+low_unc$setup_r_a <- c(200, 1800)[low_unc[,6]]
+low_unc$setup_r_b <- c(40, 120)[low_unc[,6]]
+
+low_unc <- low_unc[,c(1:3, 7:12)]
+
+# Similarly for high uncertainty
+
+hi_unc <- expand.grid(m, int_t, target_n, rec_rate, rec_v, setup_r)
+hi_unc$beta_m <- c(1.75, 2.954)[hi_unc[,4]]
+hi_unc$beta_s <- c(0.2890, 0.2889)[hi_unc[,4]]
+hi_unc$v_sh <- c(5, 30)[hi_unc[,5]]
+hi_unc$v_r <- c(100, 100)[hi_unc[,5]]
+hi_unc$setup_r_a <- c(10, 90)[hi_unc[,6]]
+hi_unc$setup_r_b <- c(2, 6)[hi_unc[,6]]
+
+hi_unc <- hi_unc[,c(1:3, 7:12)]
+
+scenarios <- rbind(low_unc, hi_unc)
+scenarios <- cbind(1:nrow(scenarios), scenarios)
+
+# Replicate each scanrio 10 times to split across HPC
+scenarios <- scenarios[rep(1:nrow(scenarios), each = 10),]
+scenarios$part <- rep(1:10, 128)
+scenarios <- scenarios[, c(1, 11, 2:10)]
+names(scenarios)[1:5] <- c("id", "part", "m", "int_t", "target_n")
+
+#write.csv(scenarios, file = paste0("R/scenarios.csv"), row.names = FALSE)
 ```
