@@ -4,11 +4,25 @@ generate_data <- function(m, int_t, target_n,
                                beta_m, beta_s, v_sh, v_r, setup_r_a, setup_r_b) {
   
   # m - total number of sites to be set up
-  # int_t - time of interim analysis (years)
+  # int_t - time of interim analysis, as a proportion of expected full time
   # target_n - target recruitment, which we will cap at
   # beta_m, beta_s - hyperparameters for the (normal) prior on beta_0
   # v_sh, v_r = hyperparameters for the gamma prior on sd_l
   # setup_r_a, _b - hyperparameters for (gamma) prior on yearly site set up rate
+  
+  # Get interim time in years
+  ## Expected rate of recruitment after all sites open
+  final_rate <- exp(beta_m + beta_s^2/2)*m
+  ## Expected time until all sites open
+  all_open <- m/(setup_r_a/setup_r_b)
+  # Expected number recruited when all sites open
+  n_0 <- final_rate*all_open/2
+  if(n_0 >= target_n){
+    exp_time <- sqrt(2*target_n*all_open/final_rate)
+  } else {
+    exp_time <- (target_n - (n_0 - final_rate*all_open))/final_rate
+  }
+  int_t <- int_t*exp_time
   
   # Max length of recruitment period in years (pretty arbitrary)
   end_rec <- 10

@@ -18,7 +18,7 @@ PC_OCs <- function(scenario){
   opt <- nsga2(OCs, 3, 2,
                lower.bounds = rep(-1, 3),
                upper.bounds = c(max_m_p, max_n_p, max_r_p),
-               popsize = 500, generations = 500,
+               popsize = 100, generations = 100,
                thr = 3.5, df = df)
   
   # Summarise rules by finding the optimal FNR for a series of nominal FPRs
@@ -52,5 +52,5 @@ OCs <- function(rule, thr, df){
 
 opt_fnr <- function(nom_fpr, opt_vals){
   # Find the best FNR for a nominal FPR
-  return(opt_vals[opt_vals[,1] <= nom_fpr, drop = FALSE][1,2])
+  return(opt_vals[opt_vals[,1] <= nom_fpr, ,drop = FALSE][1,2])
 }
