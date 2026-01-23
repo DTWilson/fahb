@@ -27,13 +27,13 @@ m <- sce[3]; int_t <- sce[4]; target_n <- sce[5]
 beta_m <- sce[6]; beta_s <- sce[7]
 v_sh <- sce[8]; v_r <- sce[9]
 setup_r_a <- sce[10]; setup_r_b <- sce[11]
+int_t <- int_t*sce[12]
 
 int_data <- generate_data(m=20, int_t=0.5, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=5, v_r=100, setup_r_a=10, setup_r_b=1)[[1]]
 
-stanvars <- stanvar(v_sh, name='v_sh') + stanvar(v_r, name='v_r')
+stanvars <- stanvar(beta_m, name='beta_m') + stanvar(beta_s, name='beta_s') + stanvar(v_sh, name='v_sh') + stanvar(v_r, name='v_r')
 
-bprior <- c(prior(normal(1.75, 0.3), class = "Intercept"),
-            #prior(student_t(10, 0, 0.4), class = "sd"))
+bprior <- c(prior(normal(beta_m, beta_s), class = "Intercept"),
             prior(gamma(v_sh, v_r), class = "sd"))
 
 bayes_model <- brm(y | rate(t) ~ 1 + (1 | c), data = int_data, family = poisson(),
@@ -49,7 +49,7 @@ for(i in 1:N){
   rec_time <- x[[2]]
   
   PC_stats <- PC_analysis(int_data)
-  Bayes_stats <- Bayes_analysis(int_data, m, bayes_model, int_t, target_n)
+  Bayes_stats <- Bayes_analysis(int_data, m, bayes_model, int_t, target_n, setup_r_a, setup_r_b)
   
   res <- rbind(res, c(rec_time, PC_stats, Bayes_stats))
 }

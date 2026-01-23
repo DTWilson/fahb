@@ -12,28 +12,28 @@ This document records the design and analysis of a simulation study comparing me
 
 Using the syntax of the code, we have the following design variables:
 
-- `m` - the number of sites to open over the full trial
-- `int_t` - the timing of the pilot interim analysis, expressed as a proportion of the expected time to recruit to target
-- `target_n` - the target sample size which will lead to recruitment stopping
+-   `m` - the number of sites to open over the full trial
+-   `int_t` - the timing of the pilot interim analysis, expressed as a proportion of the expected time to recruit to target
+-   `target_n` - the target sample size which will lead to recruitment stopping
 
 We also have some model parameters:
 
-- `beta_0` and `sqrt(var_l)` - parameters for the log-normal distribution of the site recruitment rates
-- `setup_r` - the setup rate for sites
+-   `beta_0` and `sqrt(var_l)` - parameters for the log-normal distribution of the site recruitment rates
+-   `setup_r` - the setup rate for sites
 
 Becuase we have a Bayesian model, the parameters to vary in a simulation study are actually the hyper-parameters describing the priors for the three substantive parameters above. We have:
 
-- `beta_m` and `beta_s` - parameters of the normal prior on `beta_0`
-- `v_df` and `v_c` - parameters of the gamma prior on `sqrt(var_l)`
-- `setup_r_a` and `setup_r_b` - parameters of the gamma prior on `setup_r`
+-   `beta_m` and `beta_s` - parameters of the normal prior on `beta_0`
+-   `v_df` and `v_c` - parameters of the gamma prior on `sqrt(var_l)`
+-   `setup_r_a` and `setup_r_b` - parameters of the gamma prior on `setup_r`
 
 ## Scenarios
 
 We will define scenariuos by taking low or high values for:
 
-- The design parameters;
-- The expected prior values of the three substantive model parameters; and
-- An overall level of uncertainty in all three prior distributions.
+-   The design parameters;
+-   The expected prior values of the three substantive model parameters; and
+-   An overall level of uncertainty in all three prior distributions.
 
 For `m`, we will use 10 (low) or 30 (high).
 
@@ -70,6 +70,7 @@ beta_m <- 2.954; beta_s <- sqrt(2*(log(20) - beta_m))
 beta_s
 exp(beta_m + beta_s^2/2); sqrt(exp(beta_s^2 + 2)*sqrt(exp(beta_s^2) - 1))
 ```
+
 Now `sqrt(var_l)`:
 
 ```{r}
@@ -119,7 +120,8 @@ setup_r_a <- 90; setup_r_b <- setup_r_a/15
 setup_r_b
 setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
 ```
-Now we put all these variations into a .csv file to be read in during the batch. Note we will replicate each scenario 10 times, running 10^4 simulations in each component.
+
+Now we put all these variations into a .csv file to be read in during the batch. Note we will replicate each scenario 10 times, running 10\^4 simulations in each component.
 
 ```{r}
 m <- c(10, 30)
@@ -164,4 +166,44 @@ scenarios <- scenarios[, c(1, 11, 2:10)]
 names(scenarios)[1:5] <- c("id", "part", "m", "int_t", "target_n")
 
 #write.csv(scenarios, file = paste0("R/scenarios.csv"), row.names = FALSE)
+```
+
+Each scenario will have a different expected time to recruit, which we will use to set our feasibility threshold - at 1.2 times this expectation.
+
+```{r}
+exp_rec_time <- function(sce){
+
+  m <- sce[3]; target_n <- sce[5]
+  beta_m <- sce[6]; beta_s <- sce[7]
+  setup_r_a <- sce[10]; setup_r_b <- sce[11]
+  
+  # Expected rate of recruitment after all sites open
+  final_rate <- exp(beta_m + beta_s^2/2)*m
+  # Expected time until all sites open
+  all_open <- m/(setup_r_a/setup_r_b)
+  # Expected number recruited when all sites open
+  n_0 <- final_rate*all_open/2
+  if(n_0 >= target_n){
+    exp_time <- sqrt(2*target_n*all_open/final_rate)
+  } else {
+    exp_time <- (target_n - (n_0 - final_rate*all_open))/final_rate
+  }
+  return(exp_time)
+}
+
+scenarios$exp_t <- apply(scenarios, 1, exp_rec_time)
+scenarios$thr <- 1.2*scenarios$exp_t
+
+#write.csv(scenarios, file = paste0("R/scenarios.csv"), row.names = FALSE)
+```
+## Analysis
+
+```{r}
+i <- 1
+plot(PC_OCs_curve(i)[[1]])
+points(Bayes_OCs_curve(i), col = "red")
+
+i <- 3
+plot(PC_OCs_curve(i)[[1]])
+points(Bayes_OCs_curve(i), col = "red")
 ```
