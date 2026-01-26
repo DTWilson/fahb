@@ -29,7 +29,7 @@ v_sh <- sce[8]; v_r <- sce[9]
 setup_r_a <- sce[10]; setup_r_b <- sce[11]
 int_t <- int_t*sce[12]
 
-int_data <- generate_data(m=20, int_t=0.5, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=5, v_r=100, setup_r_a=10, setup_r_b=1)[[1]]
+int_data <- generate_data(m=20, int_t=3, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=5, v_r=100, setup_r_a=10, setup_r_b=1)[[1]]
 
 stanvars <- stanvar(beta_m, name='beta_m') + stanvar(beta_s, name='beta_s') + stanvar(v_sh, name='v_sh') + stanvar(v_r, name='v_r')
 

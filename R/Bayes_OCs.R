@@ -14,10 +14,10 @@ Bayes_OCs_curve <- function(scenario){
   opt_vals <- t(sapply(Bayes_rule, Bayes_OCs, thr = sce$thr, df = df))
   
   # Summarise rules by finding the optimal FNR for a series of nominal FPRs
-  nom_fprs <- seq(0, 1, 0.01)
+  nom_fprs <- seq(0.01, 0.99, 0.01)
   opt_vals <- opt_vals[order(-opt_vals[,1]),]
-  opt_vals <- rbind(c(1,0), opt_vals, c(0,1))
-  opt_fnrs <- sapply(nom_fprs, opt_fnr, opt_vals = opt_vals)
+  #opt_vals <- rbind(c(1,0), opt_vals, c(0,1))
+  opt_fnrs <- sapply(nom_fprs, Bayes_opt_fnr, opt_vals = opt_vals)
   
   return(matrix(c(nom_fprs, opt_fnrs), ncol = 2))
 }
@@ -26,10 +26,15 @@ Bayes_OCs <- function(rule, thr, df){
   # Calculate FPR and FNR for a given Bayes rule
   
   feas <- df$rec_t < thr
-  go <- df$pred_t < rule
+  go <- !((df$pred_t >= rule) | (df$pred_t < 0))
   
   fpr <- sum(go[!feas])/(sum(!feas))
   fnr <- sum(!go[feas])/(sum(feas))
   
   return(c(fpr, fnr))
+}
+
+Bayes_opt_fnr <- function(nom_fpr, opt_vals){
+  # Find the best FNR for a nominal FPR
+  return(opt_vals[opt_vals[,1] <= nom_fpr, ,drop = FALSE][1,2])
 }
