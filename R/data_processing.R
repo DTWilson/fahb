@@ -27,7 +27,6 @@ for(i in sces){
     }
   }
   sce_data <- as.data.frame(sce_data)
-  names(sce_data) <- c("rec_t", "m_p", "n_p", "r_p", 
-                       "mean_t", "q90_t", "q95_t", "q975_t", "q99_t")
+  names(sce_data) <- c("rec_t", "m_p", "n_p", "r_p", "pred_t")
   saveRDS(sce_data, file = paste0("./data/res_", i, "_full.rds"))
 }

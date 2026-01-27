@@ -201,10 +201,26 @@ scenarios$thr <- 1.2*scenarios$exp_t
 For every scenario, find the FPR/FNR curves for both the PC and Bayes approaches to analysis. This takes a bit of time (especially the MCO for the PC approach), so do it once and save the results.
 
 ```{r}
-i <- 9
-res_comp <- PC_OCs_curve(i)
-res_comp <- cbind(res_comp, Bayes_OCs_curve(i)[,2])
+full_res <- NULL
+for(i in 28:128){
+  print(i)
+  res_comp <- PC_OCs_curve(i)
+  res_comp <- cbind(res_comp, Bayes_OCs_curve(i)[,2])
+  res_comp <- cbind(i, res_comp)
+  full_res <- rbind(full_res, res_comp)
+}
 
-plot(res_comp[,1:2])
-points(res_comp[,c(1,6)], col = "red")
+# Note - we are getting a v. small proportions (max 0.5%) of NAs in the Bayesian
+# mean predictions in a handful of scenarios
+
+#saveRDS(full_res, "full_res.rds")
+```
+
+
+```{r}
+full_res <- readRDS("full_res.rds")
+hist(full_res[,3] - full_res[,7], breaks = seq(-0.02, 0.1, 0.001))
+
+plot(full_res[full_res[,1] == 1, c(2,3)])
+points(full_res[full_res[,1] == 1, c(2,7)], col="red")
 ```

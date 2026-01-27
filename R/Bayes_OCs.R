@@ -9,7 +9,10 @@ Bayes_OCs_curve <- function(scenario){
   scenarios <- read.csv("R/scenarios.csv")
   sce <- scenarios[scenarios$id == scenario,][1,]
   
-  Bayes_rule <- seq(0, max(df$pred_t), length.out = 500)
+  Bayes_rule <- seq(0, max(df$pred_t, na.rm = T), length.out = 500)
+  
+  na_count <- sum(is.na(df$pred_t))
+  if(na_count > 0) cat(na_count, "NAs in scenario", scenario)
   
   opt_vals <- t(sapply(Bayes_rule, Bayes_OCs, thr = sce$thr, df = df))
   
