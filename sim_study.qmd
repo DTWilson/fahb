@@ -196,6 +196,53 @@ scenarios$thr <- 1.2*scenarios$exp_t
 
 #write.csv(scenarios, file = paste0("R/scenarios.csv"), row.names = FALSE)
 ```
+
+Plot the four priors for each of the three parameters - for each, a low and high mean and a low and high uncertainty.
+
+```{r}
+N <- 10^5
+df <- data.frame(y = c(exp(rnorm(N, 1.79, 0.0593)),
+                       exp(rnorm(N, 1.75,0.2890)),
+                       exp(rnorm(N, 2.994, 0.0588)),
+                       exp(rnorm(N, 2.954, 0.2889))),
+                 val = rep(c("low", "high"), each = 2*N),
+                 unc = rep(rep(c("low", "high"), each = N), 2))
+
+p1 <- ggplot(df, aes(y, fill = val, colour= unc)) + stat_density(alpha = 0.1) +
+  xlim(c(0,30)) + xlab("Expected recruitment rate") + 
+  theme_minimal()
+```
+
+```{r}
+df <- data.frame(y = c(rgamma(N, 100, 2000),
+                       rgamma(N, 5, 100),
+                       rgamma(N, 500, 1667),
+                       rgamma(N, 30, 100)),
+                 val = rep(c("low", "high"), each = 2*N),
+                 unc = rep(rep(c("low", "high"), each = N), 2))
+
+p2 <- ggplot(df, aes(y, fill = val, colour= unc)) + stat_density(alpha = 0.1) +
+  xlab("Standard deviation of recruitment rate") + 
+  theme_minimal()
+```
+
+```{r}
+df <- data.frame(y = c(rgamma(N, 200, 40),
+                       rgamma(N, 10, 2),
+                       rgamma(N, 1800, 120),
+                       rgamma(N, 90, 6)),
+                 val = rep(c("low", "high"), each = 2*N),
+                 unc = rep(rep(c("low", "high"), each = N), 2))
+
+p3 <- ggplot(df, aes(y, fill = val, colour= unc)) + stat_density(alpha = 0.1) +
+  xlab("Site opening rate") + 
+  theme_minimal()
+
+p1 / p2 / p3 + plot_layout(guides = 'collect')
+
+ggsave("priors.pdf", height=12, width=14, units="cm")
+```
+
 ## Analysis
 
 For every scenario, find the FPR/FNR curves for both the PC and Bayes approaches to analysis. This takes a bit of time (especially the MCO for the PC approach), so do it once and save the results.
@@ -227,9 +274,18 @@ names(full_res) <- c("sce", "fpr", "fnr_PC", "red_m", "red_n", "red_r", "fnr_B")
 full_res$fnr_dif <- full_res$fnr_PC - full_res$fnr_B
 
 ggplot(full_res, aes(x = fnr_dif)) + stat_density(alpha = 0.4) +
+  xlab("Difference in optimal False Negative Rates") + 
+  xlim(c(-0.025, 0.1)) +
   theme_minimal()
 
-quantile(full_res$fnr_dif, c(0.9, 0.95, 0.99))
+#ggsave("fnr_dif.pdf", height=9, width=14, units="cm")
+```
+
+Some numerical summaries:
+
+```{r}
+mean(full_res$fnr_dif)
+quantile(full_res$fnr_dif, c(0.005, 0.995))
 ```
 
 Look at redundancy in the optimal PC rules:
@@ -239,10 +295,39 @@ colMeans(full_res[,4:6])
 num_red <- full_res[,4] + full_res[,5] + full_res[,6]
 mean(num_red == 0); mean(num_red == 1); mean(num_red == 2)
 ```
-A specific scenario to focus on
+## Illustrative example
+
+We will replace this with GUSTO, but as a placeholder and to work out the figures we will use scenario 126.
 
 ```{r}
+sces <- read.csv("R/scenarios.csv")
+sces[sces$id == 126,][1,]
+```
+
+So we have a trial expected to recruit to 788 within 2.3 years, with 30 sites and an interim analysis after 20% of the recruitment window has passed.
+
+```{r}
+full_res <- as.data.frame(readRDS("full_res.rds"))
+names(full_res) <- c("sce", "fpr", "fnr_PC", "red_m", "red_n", "red_r", "fnr_B")
+full_res$fnr_dif <- full_res$fnr_PC - full_res$fnr_B
+
 sub <- full_res[full_res$sce == 126,]
-plot(sub[,c(2,3)])
-points(sub[,c(2,7)], col="red")
+
+df <- data.frame(fpr = rep(sub$fpr, 2),
+                 fnr = c(sub$fnr_PC, sub$fnr_B),
+                 t = rep(c("PC", "Bayes"), each = nrow(sub)))
+
+ggplot(df, aes(fpr, fnr, colour = t)) + geom_point() +
+  xlab("False Positive Rate") + ylab("False Negative Rate") +
+  scale_colour_discrete(name = "Method") +
+  theme_minimal()
+
+#ggsave("ill_ex.pdf", height=9, width=14, units="cm")
+```
+
+Looking at a specific FPR:
+
+```{r}
+# Manually for now - need to re-run full analysis to keep the PC rule details
+# 0.20 0.250052665 -0.117898543 18.07059981 15.695877 1 0 0
 ```

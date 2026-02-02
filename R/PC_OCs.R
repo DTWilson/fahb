@@ -26,7 +26,7 @@ PC_OCs_curve <- function(scenario){
   # Summarise rules by finding the optimal FNR for a series of nominal FPRs
   ## First, for every efficient rule record if the components were redundant
   opt_vals <- opt$value
-  opt_vals <- cbind(opt_vals, opt$par <= 0)
+  opt_vals <- cbind(opt_vals, opt$par, opt$par <= 0)
 
   ## Reduce down to a summary
   opt_vals <- opt_vals[order(-opt_vals[,1]),]
@@ -58,5 +58,5 @@ PC_OCs <- function(rule, thr, df){
 
 PC_opt_fnr <- function(nom_fpr, opt_vals){
   # Find the best FNR for a nominal FPR
-  return(opt_vals[opt_vals[,1] <= nom_fpr, ,drop = FALSE][1,2:5])
+  return(opt_vals[opt_vals[,1] <= nom_fpr, ,drop = FALSE][1,2:8])
 }
