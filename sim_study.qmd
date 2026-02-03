@@ -331,3 +331,49 @@ Looking at a specific FPR:
 # Manually for now - need to re-run full analysis to keep the PC rule details
 # 0.20 0.250052665 -0.117898543 18.07059981 15.695877 1 0 0
 ```
+
+For GUSTO - target is 320 participants over 3 years from 20 sites.
+
+Recruitment estimated at 13 per month once all sites are open - so 7.8 per site per year.
+
+PC are at least 5 sites open and at least 30 participants recruited by 6 months.
+
+If we assume a steady increase in recruitment rate as sites open, the above assumptions imply all sites will be open at 1.90 years into the study and so we get a site opening rate of 10.53 sites per year.
+
+```{r}
+beta_m <- 2; beta_s <- sqrt(2*(log(7.8) - beta_m))
+beta_s
+exp(beta_m + beta_s^2/2); sqrt(exp(beta_s^2 + 2)*sqrt(exp(beta_s^2) - 1))
+hist(exp(rnorm(10^4, beta_m, beta_s)))
+
+v_sh <- 30; v_r <- v_sh/0.3
+v_r
+v_sh/v_r; sqrt(v_sh/(v_r^2))
+hist(rgamma(10^4, v_sh, rate = v_r))
+
+beta <- rnorm(10^4, beta_m, beta_s)
+sig <- rgamma(10^4, v_sh, rate = v_r)
+lambdas <- exp(rnorm(10^4, beta, sig))
+hist(lambdas)
+
+setup_r_a <- 30; setup_r_b <- setup_r_a/10.53
+setup_r_b
+setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
+hist(rgamma(10^4, setup_r_a, rate = setup_r_b))
+
+gusto <- data.frame(id = 1,
+                    part = 1:10,
+                    m = 20,
+                    int_t = 0.166,
+                    target_n = 320,
+                    beta_m = 2,
+                    beta_s = 0.329,
+                    v_sh = 30,
+                    v_r = 100,
+                    setup_r_a = 30,
+                    setup_r_b = 2.85,
+                    exp_t = 3,
+                    thr = 1.2*3)
+
+
+```
