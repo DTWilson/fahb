@@ -295,29 +295,50 @@ colMeans(full_res[,4:6])
 num_red <- full_res[,4] + full_res[,5] + full_res[,6]
 mean(num_red == 0); mean(num_red == 1); mean(num_red == 2)
 ```
+
 ## Illustrative example
 
-We will replace this with GUSTO, but as a placeholder and to work out the figures we will use scenario 126.
+GUSTO data is saved under scenario 129. Analyse and add to the saved analysed data.
 
 ```{r}
-sces <- read.csv("R/scenarios.csv")
-sces[sces$id == 126,][1,]
-```
+full_res <- readRDS("full_res.rds")
+for(i in 129){
+  print(i)
+  res_comp <- PC_OCs_curve(i)
+  res_comp <- cbind(res_comp, Bayes_OCs_curve(i)[,2])
+  res_comp <- as.data.frame(cbind(i, res_comp))
+  names(res_comp) <- names(full_res)
+  full_res <- rbind(full_res, res_comp)
+}
 
-So we have a trial expected to recruit to 788 within 2.3 years, with 30 sites and an interim analysis after 20% of the recruitment window has passed.
+# Note - we are getting a v. small proportions (max 0.5%) of NAs in the Bayesian
+# mean predictions in a handful of scenarios
+
+for(i in 129){
+  full_res[full_res$sce == i, 7] <- Bayes_OCs_curve(i)[,2]
+}
+
+#saveRDS(full_res, "full_res.rds")
+```
 
 ```{r}
 full_res <- as.data.frame(readRDS("full_res.rds"))
-names(full_res) <- c("sce", "fpr", "fnr_PC", "red_m", "red_n", "red_r", "fnr_B")
 full_res$fnr_dif <- full_res$fnr_PC - full_res$fnr_B
 
-sub <- full_res[full_res$sce == 126,]
+sub <- full_res[full_res$sce == 129,]
 
 df <- data.frame(fpr = rep(sub$fpr, 2),
                  fnr = c(sub$fnr_PC, sub$fnr_B),
                  t = rep(c("PC", "Bayes"), each = nrow(sub)))
 
+# Add the OCs of the progression criteria from the protocol - both
+# the green crieteria and the non-red criteria.
+df2 <- data.frame(fpr = c(0, 0.161),
+                  fnr = c(0.961, 0.413),
+                  t = c("PC", "PC"))
+
 ggplot(df, aes(fpr, fnr, colour = t)) + geom_point() +
+  geom_point(data= df2, colour = "black") +
   xlab("False Positive Rate") + ylab("False Negative Rate") +
   scale_colour_discrete(name = "Method") +
   theme_minimal()
@@ -329,7 +350,7 @@ Looking at a specific FPR:
 
 ```{r}
 # Manually for now - need to re-run full analysis to keep the PC rule details
-# 0.20 0.250052665 -0.117898543 18.07059981 15.695877 1 0 0
+# 0.1994575937 0.334292258  1.04317670  7.33663681  5.5209017    0    0    0
 ```
 
 For GUSTO - target is 320 participants over 3 years from 20 sites.
@@ -362,7 +383,7 @@ setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
 hist(rgamma(10^4, setup_r_a, rate = setup_r_b))
 
 gusto <- data.frame(id = 1,
-                    part = 1:10,
+                    part = 1:100,
                     m = 20,
                     int_t = 0.166,
                     target_n = 320,
@@ -375,5 +396,37 @@ gusto <- data.frame(id = 1,
                     exp_t = 3,
                     thr = 1.2*3)
 
+#write.csv(gusto, "R/gusto.csv", row.names = FALSE)
+```
 
+Plot the priors:
+
+```{r}
+df <- data.frame(beta = rnorm(10^5, beta_m, beta_s))
+p1 <- ggplot(df, aes(beta)) + stat_density(alpha = 0.2, colour = "black") +
+  xlab(expression(beta)) +
+  theme_minimal()
+
+df <- data.frame(sig = rgamma(10^5, v_sh, rate = v_r))
+p2 <- ggplot(df, aes(sig)) + stat_density(alpha = 0.2, colour = "black") +
+  xlab(expression(sigma)) +
+  theme_minimal()
+
+df <- data.frame(beta = rnorm(10^5, beta_m, beta_s),
+                 sig = rgamma(10^5, v_sh, rate = v_r))
+df$gamma <- exp(rnorm(10^5, df$beta, df$sig))
+p3 <- ggplot(df, aes(gamma)) + stat_density(alpha = 0.2, colour = "black") +
+  xlab(expression(gamma[i])) +
+  xlim(c(0, 30)) +
+  theme_minimal()
+
+df <- data.frame(lambda = rgamma(10^5, setup_r_a, rate = setup_r_b))
+p4 <- ggplot(df, aes(lambda)) + stat_density(alpha = 0.2, colour = "black") +
+  xlab(expression(lambda)) +
+  theme_minimal()
+
+library(patchwork)
+(p1 + p2) / (p3 + p4)
+
+#ggsave("ill_priors.pdf", height=11, width=14, units="cm")
 ```

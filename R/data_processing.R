@@ -1,5 +1,5 @@
-sces <- 1:128
-parts <- 1:10
+sces <- 1
+parts <- 1:100
 
 scenarios <- read.csv("./R/scenarios.csv")
 
@@ -28,5 +28,6 @@ for(i in sces){
   }
   sce_data <- as.data.frame(sce_data)
   names(sce_data) <- c("rec_t", "m_p", "n_p", "r_p", "pred_t")
-  saveRDS(sce_data, file = paste0("./data/res_", i, "_full.rds"))
+  #saveRDS(sce_data, file = paste0("./data/res_", i, "_full.rds"))
+  saveRDS(sce_data, file = paste0("./data/res_129_full.rds"))
 }

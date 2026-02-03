@@ -7,7 +7,8 @@ Bayes_OCs_curve <- function(scenario){
   
   df <- readRDS(paste0("./data/res_", scenario, "_full.rds"))
   scenarios <- read.csv("R/scenarios.csv")
-  sce <- scenarios[scenarios$id == scenario,][1,]
+  #sce <- scenarios[scenarios$id == scenario,][1,]
+  sce <- read.csv("R/gusto.csv")
   
   Bayes_rule <- seq(0, max(df$pred_t, na.rm = T), length.out = 500)
   
@@ -24,7 +25,7 @@ Bayes_OCs_curve <- function(scenario){
   #opt_vals <- rbind(c(1,0), opt_vals, c(0,1))
   opt_fnrs <- t(sapply(nom_fprs, Bayes_opt_fnr, opt_vals = opt_vals))
   
-  return(matrix(c(nom_fprs, opt_fnrs), ncol = 3))
+  return(matrix(c(nom_fprs, opt_fnrs), ncol = 2))
 }
 
 Bayes_OCs <- function(rule, thr, df){
@@ -41,5 +42,5 @@ Bayes_OCs <- function(rule, thr, df){
 
 Bayes_opt_fnr <- function(nom_fpr, opt_vals){
   # Find the best FNR for a nominal FPR
-  return(opt_vals[opt_vals[,1] <= nom_fpr, ,drop = FALSE][1,2:3])
+  return(opt_vals[opt_vals[,1] <= nom_fpr, ,drop = FALSE][1,2])
 }
