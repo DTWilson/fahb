@@ -430,3 +430,8 @@ library(patchwork)
 
 #ggsave("ill_priors.pdf", height=11, width=14, units="cm")
 ```
+
+## Extension
+
+We can extend our approach easily to external pilots. The key changes are i) we reset everything after interim so that no sites are open and no patients have been recruited, and ii) we define the external pilot design by its numbers of participants and of sites. We can give a single method if we have a flag for resetting and if we define pilot sample sizes as caps and finish either when they are hit or when the interim analysis time point arrives - whichever comes first.
+
