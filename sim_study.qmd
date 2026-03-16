@@ -443,7 +443,8 @@ ext_design <- expand.grid(m_p = 3:10,
 
 scenarios <- scenarios[rep(1, nrow(ext_design)),]
 scenarios <- cbind(scenarios, ext_design)
+scenarios$id <- 1:nrow(scenarios)
 
-write.csv(scenarios, file = "R/scenarios_ext.csv")
+#write.csv(scenarios, file = "R/scenarios_ext.csv", row.names = FALSE)
 ```
 
