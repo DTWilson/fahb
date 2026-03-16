@@ -41,7 +41,7 @@ generate_data <- function(m, int_t, target_n,
   }
   
   # Output the interim data and the time to reach target n
-  return(list(data = df, rec_time = rec_time))
+  return(list(data = df, rec_time = rec_time, int_t = int_t))
   
   #generate_data(m=20, int_t=0.5, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=10, v_r=3.3, setup_r_a=10, setup_r_b=1)
 }

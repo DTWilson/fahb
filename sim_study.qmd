@@ -435,3 +435,15 @@ library(patchwork)
 
 We can extend our approach easily to external pilots. The key changes are i) we reset everything after interim so that no sites are open and no patients have been recruited, and ii) we define the external pilot design by its numbers of participants and of sites. We can give a single method if we have a flag for resetting and if we define pilot sample sizes as caps and finish either when they are hit or when the interim analysis time point arrives - whichever comes first.
 
+```{r}
+scenarios <- read.csv("R/scenarios.csv")[1,]
+
+ext_design <- expand.grid(m_p = 3:10,
+                          target_n_p = seq(30, 150, 10))
+
+scenarios <- scenarios[rep(1, nrow(ext_design)),]
+scenarios <- cbind(scenarios, ext_design)
+
+write.csv(scenarios, file = "R/scenarios_ext.csv")
+```
+
