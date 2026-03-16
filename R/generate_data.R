@@ -80,6 +80,10 @@ cond_sim <- function(m, target_n, m_p,
     # Recruit to target in the final period
     rec_rates[nrow(rec_rates), 5] <- target_n - sum(rec_rates[1:m_p, 5])
   }
+  
+  ## Add the lambdas as a column
+  rec_rates <- cbind(rec_rates, c(0, lambdas[setup_order]))
+  
   fin_period <- which(cumsum(rec_rates[,5]) >= target_n)[1]
   ## Determine how many people need to arrive in that final period
   n_needed <- target_n - sum(rec_rates[1:(fin_period-1), 5])
@@ -109,7 +113,8 @@ site_dist <- function(rec_rates, int_t){
     n_p <- n_p +  sum(runif(rec_rates[int_period, 5], rec_rates[int_period, 2], rec_rates[int_period, 3]) < int_t)
     ## Distribute these participants to sites in proportion to their expected
     ## numbers, given their true rates and times open
-    n_ps <- rmultinom(1, n_p, prob = (int_t- rec_rates[2:(m_p+1), 2])*lambdas[rec_rates[2:(m_p+1),1]]) 
+    n_ps <- rmultinom(1, n_p, prob = (int_t- rec_rates[2:(m_p+1), 2])*
+                                             rec_rates[2:(m_p+1), 6])
     
     # Create a data frame storing the sites open at interim, the numbers 
     # they each recruited, and how long they were recruiting for
