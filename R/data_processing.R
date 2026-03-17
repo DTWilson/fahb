@@ -1,10 +1,10 @@
-sces <- 1
-parts <- 1:100
+sces <- 1:104
+parts <- 1:10
 
-scenarios <- read.csv("./R/scenarios.csv")
+scenarios <- read.csv("./R/scenarios_ext.csv")
 
 # Check we have the right number of data sets
-counts <- rep(0, 128)
+counts <- rep(0, 104)
 sce_sub <- NULL
 for(i in sces){
   for(j in parts){
@@ -29,5 +29,6 @@ for(i in sces){
   sce_data <- as.data.frame(sce_data)
   names(sce_data) <- c("rec_t", "m_p", "n_p", "r_p", "pred_t")
   #saveRDS(sce_data, file = paste0("./data/res_", i, "_full.rds"))
-  saveRDS(sce_data, file = paste0("./data/res_129_full.rds"))
+  #saveRDS(sce_data, file = paste0("./data/res_129_full.rds"))
+  saveRDS(sce_data, file = paste0("./data/res_ext_", i, "_full.rds"))
 }

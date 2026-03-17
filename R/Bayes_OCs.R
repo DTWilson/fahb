@@ -5,10 +5,14 @@ Bayes_OCs_curve <- function(scenario){
   # finds the Pareto front given by that range.
   # Returns a list of a reduced summary of the Pareto front.
   
-  df <- readRDS(paste0("./data/res_", scenario, "_full.rds"))
-  scenarios <- read.csv("R/scenarios.csv")
+  #df <- readRDS(paste0("./data/res_", scenario, "_full.rds"))
+  #scenarios <- read.csv("R/scenarios.csv")
   #sce <- scenarios[scenarios$id == scenario,][1,]
-  sce <- read.csv("R/gusto.csv")
+  #sce <- read.csv("R/gusto.csv")
+  
+  df <- readRDS(paste0("./data/res_ext_", scenario, "_full.rds"))
+  scenarios <- read.csv("R/scenarios_ext.csv")
+  sce <- scenarios[scenarios$id == scenario,][1,]
   
   Bayes_rule <- seq(0, max(df$pred_t, na.rm = T), length.out = 500)
   

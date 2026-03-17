@@ -9,10 +9,14 @@ PC_OCs_curve <- function(scenario){
   # describing the extenet of redundancy in the full set of efficient 
   # solutions. 
   
-  df <- readRDS(paste0("./data/res_", scenario, "_full.rds"))
-  scenarios <- read.csv("R/scenarios.csv")
+  #df <- readRDS(paste0("./data/res_", scenario, "_full.rds"))
+  #scenarios <- read.csv("R/scenarios.csv")
   #sce <- scenarios[scenarios$id == scenario,][1,]
-  sce <- read.csv("R/gusto.csv")
+  #sce <- read.csv("R/gusto.csv")
+  
+  df <- readRDS(paste0("./data/res_ext_", scenario, "_full.rds"))
+  scenarios <- read.csv("R/scenarios_ext.csv")
+  sce <- scenarios[scenarios$id == scenario,][1,]
   
   max_m_p <- max(df$m_p)
   max_n_p <- max(df$n_p)

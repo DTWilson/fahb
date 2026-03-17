@@ -436,7 +436,7 @@ library(patchwork)
 We can extend our approach easily to external pilots. The key changes are i) we reset everything after interim so that no sites are open and no patients have been recruited, and ii) we define the external pilot design by its numbers of participants and of sites. We can give a single method if we have a flag for resetting and if we define pilot sample sizes as caps and finish either when they are hit or when the interim analysis time point arrives - whichever comes first.
 
 ```{r}
-scenarios <- read.csv("R/scenarios.csv")[1,]
+scenarios <- read.csv("R/gusto.csv")[1,]
 
 ext_design <- expand.grid(m_p = 3:10,
                           target_n_p = seq(30, 150, 10))
@@ -445,6 +445,48 @@ scenarios <- scenarios[rep(1, nrow(ext_design)),]
 scenarios <- cbind(scenarios, ext_design)
 scenarios$id <- 1:nrow(scenarios)
 
+scenarios <- scenarios[rep(1:nrow(scenarios), each = 10),]
+scenarios$part <- rep(1:10, 104)
+
+# Change interim analysis time so that we always recruit to target in the pilot
+scenarios$int_t <- 10
+
 #write.csv(scenarios, file = "R/scenarios_ext.csv", row.names = FALSE)
 ```
+
+```{r}
+full_res <- NULL
+for(i in 1:104){
+  res_comp <- PC_OCs_curve(i)
+  res_comp <- cbind(res_comp, Bayes_OCs_curve(i)[,2])
+  res_comp <- cbind(i, res_comp)
+  full_res <- rbind(full_res, res_comp)
+}
+
+# Note - we are getting a v. small proportions (max 0.5%) of NAs in the Bayesian
+# mean predictions in a handful of scenarios
+
+#saveRDS(full_res, "full_res_ext.rds")
+
+plot(full_res[full_res[,1] == 50, c(2,3)])
+points(full_res[full_res[,1] == 50, c(2,7)], col="red")
+```
+
+```{r}
+full_res <- readRDS("full_res_ext.rds")
+
+# Collapse down to nominal FPR of 0.2
+res <- full_res[full_res[,2] == 0.20,]
+
+res <- as.data.frame(cbind(res[,c(2,3,7)], ext_design))
+names(res)[2:3] <- c("PC_fnr", "Bayes_fnr")
+
+ggplot(res, aes(m_p, target_n_p, fill=Bayes_fnr)) + geom_tile() +
+  geom_tile(color = "black") +
+  scale_fill_gradient(low = "white", high = "darkgreen") +
+  xlab("Pilot sites") + ylab("Pilot participants") +
+  theme_minimal()
+```
+
+
 

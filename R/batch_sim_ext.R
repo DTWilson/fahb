@@ -28,7 +28,7 @@ beta_m <- sce[6]; beta_s <- sce[7]
 v_sh <- sce[8]; v_r <- sce[9]
 setup_r_a <- sce[10]; setup_r_b <- sce[11]
 int_t <- int_t*sce[12]
-m_p <- sce[13]; target_n_p <- sce[14]; internal <- FALSE
+m_p <- sce[14]; target_n_p <- sce[15]; internal <- FALSE
 
 int_data <- generate_data(m=20, int_t=3, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=5, v_r=100, setup_r_a=10, setup_r_b=1,
                           m_p=0, target_n_p=0, internal=TRUE)[[1]]
@@ -50,9 +50,10 @@ for(i in 1:N){
   int_data <- x[[1]]
   rec_time <- x[[2]]
   int_t_actual <- x[[3]]
+  site_t <- x[[4]]
   
   PC_stats <- PC_analysis(int_data)
-  Bayes_stats <- Bayes_analysis(int_data, m, bayes_model, int_t_actual, target_n, setup_r_a, setup_r_b, internal=FALSE)
+  Bayes_stats <- Bayes_analysis(int_data, m, bayes_model, int_t_actual, target_n, setup_r_a, setup_r_b, site_t, internal=FALSE)
   
   res <- rbind(res, c(rec_time, PC_stats, Bayes_stats))
 }
