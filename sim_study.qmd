@@ -475,6 +475,9 @@ points(full_res[full_res[,1] == 50, c(2,7)], col="red")
 ```{r}
 full_res <- readRDS("full_res_ext.rds")
 
+ext_design <- expand.grid(m_p = 3:10,
+                          target_n_p = seq(30, 150, 10))
+
 # Collapse down to nominal FPR of 0.2
 res <- full_res[full_res[,2] == 0.20,]
 
@@ -483,7 +486,7 @@ names(res)[2:3] <- c("PC_fnr", "Bayes_fnr")
 
 ggplot(res, aes(m_p, target_n_p, fill=Bayes_fnr)) + geom_tile() +
   geom_tile(color = "black") +
-  scale_fill_gradient(low = "white", high = "darkgreen") +
+  scale_fill_gradient(low = "white", high = "darkgreen", name = "FNR") +
   xlab("Pilot sites") + ylab("Pilot participants") +
   theme_minimal()
 ```

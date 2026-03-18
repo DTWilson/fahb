@@ -38,7 +38,7 @@ generate_data <- function(m, int_t, target_n,
     # parameters
     rec_rates_p <- cond_sim(m, target_n_p, m_p, setup_r, lambdas)
     int_t <- min(int_t, rec_rates_p[nrow(rec_rates_p), 3])
-    site_t <- min(int_t, rec_rates_p[m_p+1, 2])
+    site_t <- min(int_t, rec_rates_p[nrow(rec_rates_p), 2])
     
     df <- site_dist(rec_rates_p, int_t)
   }
