@@ -460,7 +460,7 @@ for(i in 1:104){
   res_comp <- PC_OCs_curve(i)
   res_comp <- cbind(res_comp, Bayes_OCs_curve(i)[,2])
   res_comp <- cbind(i, res_comp)
-  full_res <- rbind(full_res, res_comp)
+  full_res <- rbind(full_res, res_comp)#
 }
 
 # Note - we are getting a v. small proportions (max 0.5%) of NAs in the Bayesian
@@ -468,8 +468,8 @@ for(i in 1:104){
 
 #saveRDS(full_res, "full_res_ext.rds")
 
-plot(full_res[full_res[,1] == 50, c(2,3)])
-points(full_res[full_res[,1] == 50, c(2,7)], col="red")
+plot(full_res[full_res[,1] == 1, c(2,3)])
+points(full_res[full_res[,1] == 1, c(2,7)], col="red")
 ```
 
 ```{r}
