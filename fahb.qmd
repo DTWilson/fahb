@@ -331,7 +331,7 @@ for(i in 1:length(int_times)){
 
 
 ```{r}
-df2 <- readRDS("test_ALC.rds")
+df2 <- readRDS("data/test_ALC.rds")
 
 ggplot(df2, aes(t, alc)) + geom_point() +
   ylab("Average interval width") + xlab("Internal pilot length (years)") +
@@ -392,7 +392,7 @@ proc.time() - ptm
 r <- as.data.frame(r)
 proc.time() - ptm
 names(r) <- c("mean_n", "m_p", "n_p", "rate", "end_n")
-saveRDS(r, "test_r_6.rds")
+#saveRDS(r, "test_r_6.rds")
 ```
 
 ```{r, eval = FALSE}
@@ -425,7 +425,7 @@ names(r) <- c("pow", "q_pow", "avg_pow", "m_p", "n_p", "end_n")
 Now plot the data in the pilot sample space, flagging first if it is feasible (i.e. has an eventual power greater than 0.65) and then flagging the decision made when applying the Bayesian decision rule:
 
 ```{r}
-df <- readRDS("test_r_6.rds")
+df <- readRDS("data/test_r_6.rds")
 
 thr <- 200
 

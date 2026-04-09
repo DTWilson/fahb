@@ -479,15 +479,23 @@ ext_design <- expand.grid(m_p = 3:10,
                           target_n_p = seq(30, 150, 10))
 
 # Collapse down to nominal FPR of 0.2
-res <- full_res[full_res[,2] == 0.20,]
+res <- full_res[full_res[,2] == 0.2,]
 
 res <- as.data.frame(cbind(res[,c(2,3,7)], ext_design))
 names(res)[2:3] <- c("PC_fnr", "Bayes_fnr")
 
-ggplot(res, aes(m_p, target_n_p, fill=Bayes_fnr)) + geom_tile() +
+ggplot(res, aes(m_p, target_n_p, fill=PC_fnr)) +
   geom_tile(color = "black") +
   scale_fill_gradient(low = "white", high = "darkgreen", name = "FNR") +
   xlab("Pilot sites") + ylab("Pilot participants") +
+  theme_minimal()
+
+#ggsave("ext_fnr.pdf", height=9, width=14, units="cm")
+
+res$diff <- res$PC_fnr - res$Bayes_fnr
+ggplot(res, aes(x = diff)) + stat_density(alpha = 0.4) +
+  xlab("Difference in optimal False Negative Rates") + 
+  xlim(c(-0.025, 0.05)) +
   theme_minimal()
 ```
 
