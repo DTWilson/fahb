@@ -267,7 +267,6 @@ for(i in 1:128){
 #saveRDS(full_res, "full_res.rds")
 ```
 
-
 ```{r}
 full_res <- as.data.frame(readRDS("full_res.rds"))
 names(full_res) <- c("sce", "fpr", "fnr_PC", "red_m", "red_n", "red_r", "fnr_B")
@@ -322,7 +321,7 @@ for(i in 129){
 ```
 
 ```{r}
-full_res <- as.data.frame(readRDS("full_res.rds"))
+full_res <- as.data.frame(readRDS("./paper/full_res.rds"))
 full_res$fnr_dif <- full_res$fnr_PC - full_res$fnr_B
 
 sub <- full_res[full_res$sce == 129,]
@@ -337,7 +336,7 @@ df2 <- data.frame(fpr = c(0, 0.161),
                   fnr = c(0.961, 0.413),
                   t = c("PC", "PC"))
 
-ggplot(df, aes(fpr, fnr, colour = t)) + geom_point() +
+ggplot(df, aes(fpr, fnr, colour = t)) + geom_step() +
   geom_point(data= df2, colour = "black") +
   xlab("False Positive Rate") + ylab("False Negative Rate") +
   scale_colour_discrete(name = "Method") +
@@ -351,6 +350,8 @@ Looking at a specific FPR:
 ```{r}
 # Manually for now - need to re-run full analysis to keep the PC rule details
 # 0.1994575937 0.334292258  1.04317670  7.33663681  5.5209017    0    0    0
+df <- readRDS(paste0("./data/res_ext_", 129, "_full.rds"))
+PC_OCs(c( 1.04317670,  7.33663681,  5.5209017), 3.6, df)
 ```
 
 For GUSTO - target is 320 participants over 3 years from 20 sites.
@@ -431,7 +432,48 @@ library(patchwork)
 #ggsave("ill_priors.pdf", height=11, width=14, units="cm")
 ```
 
+### Sensitivity
+
+We would like to understand the consequences of not getting the standard PC thresholds quite right. To do so we can take an example efficient PC and then form a set of alternatives centered around that PC, and evaluate the operating characteristics of each one.
+
+```{r}
+#full_res <- as.data.frame(readRDS("./paper/full_res.rds"))
+full_res$fnr_dif <- full_res$fnr_PC - full_res$fnr_B
+
+sub <- full_res[full_res$sce == 129,]
+
+df <- data.frame(fpr = rep(sub$fpr, 2),
+                 fnr = c(sub$fnr_PC, sub$fnr_B),
+                 t = rep(c("PC", "Bayes"), each = nrow(sub)))
+
+ggplot(df, aes(fpr, fnr, colour = t)) + geom_step() +
+  geom_point(data= df2, colour = "black") +
+  xlab("False Positive Rate") + ylab("False Negative Rate") +
+  scale_colour_discrete(name = "Method") +
+  theme_minimal()
+
+df2 <- as.data.frame(readRDS("./data/res_129_full.rds"))
+
+base_rule <- c( 1.04317670,  7.33663681,  5.5209017)
+
+rules <- matrix(base_rule * runif(3*1000, 0.5, 1.5), ncol = 3, byrow = TRUE)
+
+sens_df <- t(apply(rules, 1, PC_OCs, thr=3.6, df=df2))
+
+sens_df <- as.data.frame(sens_df)
+names(sens_df) <- c("fpr", "fnr")
+
+ggplot(df, aes(fpr, fnr, colour = t)) + geom_step() +
+  geom_point(data= df2, colour = "black") +
+  geom_point(data = sens_df, alpha = 0.9, colour = "black") +
+  xlab("False Positive Rate") + ylab("False Negative Rate") +
+  scale_colour_discrete(name = "Method") +
+  theme_minimal()
+```
+
 ## Extension
+
+### External pilots
 
 We can extend our approach easily to external pilots. The key changes are i) we reset everything after interim so that no sites are open and no patients have been recruited, and ii) we define the external pilot design by its numbers of participants and of sites. We can give a single method if we have a flag for resetting and if we define pilot sample sizes as caps and finish either when they are hit or when the interim analysis time point arrives - whichever comes first.
 
@@ -499,5 +541,22 @@ ggplot(res, aes(x = diff)) + stat_density(alpha = 0.4) +
   theme_minimal()
 ```
 
+### Bayesian SSD
 
+On the face of it, the Bayesian approach is not feasible at the design stage. When it comes to choosing the rule we can argue that doesn't have to be a problem, because we don't need to pre-specify as a Bayesian. But a pre-specified rule can inform the sample size / the timing of the internal pilot analysis, so it would be useful.
+
+We can address this by using the NP regression approach of Strong et al., which fits neatly here. Our methods work has shown that rules based on the standard PC items are very close to the OCs of the Bayesian rules, which tells us that an approximation built around those statistics should be very close too. So we can fit a GAM, getting an expected recruit time as a function of 
+the simulated stats. We can then compare those predictions against the ones made by the full Bayesian method:
+
+```{r}
+library(mgcv)
+df <- res_102_full
+fit <- gam(rec_t ~ ti(m_p) + ti(n_p) + ti(r_p) + ti(m_p, n_p), data = df)
+x <- (df$pred_t-predict.gam(fit))
+q <- as.numeric(quantile(x, c(0.01, 0.99)))
+y <- x[x>q[1] & x<q[2]]
+hist(y)
+```
+
+This shows us that yes, the predictions from the GAM do tally well with the predictions made by the full Bayesian method. So it should give a good enough approximation for SSD. Doing that is easy - we proceed exactly as before when dealing with Bayesian rules, but now we use the predictions from the GAM rather than the full method.
 
