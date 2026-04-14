@@ -13,7 +13,7 @@ check_priors <- function(problem){
   return(list(p_so,
               p_mean_rr,
               p_sd_rr,
-              p_p_rr))
+              p_pp_rr))
 }
 
 plot_gamma_prior <- function(shape, rate, par_name){
@@ -53,7 +53,7 @@ plot_rr_prior_predictive <- function(problem){
                    sig = stats::rgamma(10^5, problem$sd_rr_hp_a, rate = problem$sd_rr_hp_b))
   df$gamma <- exp(stats::rnorm(10^5, df$beta, df$sig))
   
-  p <- ggplot2::ggplot(df, aes(gamma)) + 
+  p <- ggplot2::ggplot(df, ggplot2::aes(gamma)) + 
     ggplot2::stat_density(alpha = 0, colour = "black") +
     ggplot2::xlab("Participant recruitment rate at random site") +
     ggplot2::ylab("Prior pred. prob.") +

@@ -1,7 +1,7 @@
 bayesian_ocs <- function(problem){
   df <- problem$sims
-  fit <- gam(rec_T ~ ti(n_p) + ti(m_p) + ti(r_p) + ti(m_p, n_p), data = df)
-  df$pred_T <- predict.gam(fit)
+  fit <- mgcv::gam(rec_T ~ ti(n_p) + ti(m_p) + ti(r_p) + ti(m_p, n_p), data = df)
+  df$pred_T <- mgcv::predict.gam(fit)
   
   rules <- seq(min(df$pred_T), max(df$pred_T), length.out = 1000)
   vals <- t(sapply(rules, Bayes_OCs, thr = problem$thr, df = df))

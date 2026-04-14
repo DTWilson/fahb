@@ -5,15 +5,15 @@ simulate_data <- function(beta_m, beta_s,
   
   # True per year recruitment rates for each site
   ## Sample beta_0 from prior
-  beta_0 <- rnorm(1, mean = beta_m, sd = beta_s)
+  beta_0 <- stats::rnorm(1, mean = beta_m, sd = beta_s)
   ## Sample var_l from prior
   #var_l <- abs(rlst(1, df = v_df, mu = 0, sigma = v_sc))^2
-  sd_l <- rgamma(1, shape = v_sh, rate = v_r)
+  sd_l <- stats::rgamma(1, shape = v_sh, rate = v_r)
   ## Sample the site rates from a log-normal 
-  lambdas <- exp(rnorm(m, beta_0, sd_l))
+  lambdas <- exp(stats::rnorm(m, beta_0, sd_l))
   
   # True setup rate, from the prior
-  setup_r <- rgamma(1, setup_r_a, setup_r_b)
+  setup_r <- stats::rgamma(1, setup_r_a, setup_r_b)
   
   # Simulate the site openings and participant recruitment over time
   rec_rates <- cond_sim(m, target_n, m, setup_r, lambdas)
@@ -45,7 +45,7 @@ cond_sim <- function(m, target_n, m_p,
   # m sites
   
   # Simulate setup times
-  setup_ts <- cumsum(rexp(m_p, setup_r))
+  setup_ts <- cumsum(stats::rexp(m_p, setup_r))
   end_rec <- setup_ts[m_p] + 20
   setup_order <- sample(1:m, m_p)
   
@@ -62,7 +62,7 @@ cond_sim <- function(m, target_n, m_p,
   ## First get the vector of expected numbers recruited in each period
   exp_rec <- (rec_rates[,4]*(rec_rates[,3] - rec_rates[,2]))[2:(m_p+1)]
   ## Now sample from a Poisson for each period
-  rec_rates <- cbind(rec_rates, c(0, rpois(m_p, exp_rec)))
+  rec_rates <- cbind(rec_rates, c(0, stats::rpois(m_p, exp_rec)))
   
   # Get time at which total target n is hit
   ## First get the period when it happens
@@ -80,7 +80,7 @@ cond_sim <- function(m, target_n, m_p,
   ## Determine how many people need to arrive in that final period
   n_needed <- target_n - sum(rec_rates[1:(fin_period-1), 5])
   ## Simulate when the target is hit, which follows a gamma distribution
-  rec_time <- rec_rates[fin_period, 2] + rgamma(1, shape = n_needed, rate = rec_rates[fin_period, 4])
+  rec_time <- rec_rates[fin_period, 2] + stats::rgamma(1, shape = n_needed, rate = rec_rates[fin_period, 4])
   ## Update the rec_rates summary
   rec_rates <- rec_rates[1:fin_period,]
   rec_rates[fin_period, c(3,5)] <- c(rec_time, n_needed)
@@ -97,15 +97,15 @@ site_dist <- function(rec_rates, int_t){
   m_p <- sum(rec_rates[2:nrow(rec_rates),2] <= int_t)
   if(m_p > 0){
     ## Get period (row in matrix) where interim occurs
-    int_period <- tail(which(rec_rates[,2] <= int_t), n=1)
+    int_period <- utils::tail(which(rec_rates[,2] <= int_t), n=1)
     ## Start with the number recruited from all previous periods
     n_p <- sum(rec_rates[1:(int_period-1), 5])
     ## Simulate the extra number recruited in the final period, using the fact
     ## that arrivals will be uniformly distributed over the period
-    n_p <- n_p +  sum(runif(rec_rates[int_period, 5], rec_rates[int_period, 2], rec_rates[int_period, 3]) < int_t)
+    n_p <- n_p +  sum(stats::runif(rec_rates[int_period, 5], rec_rates[int_period, 2], rec_rates[int_period, 3]) < int_t)
     ## Distribute these participants to sites in proportion to their expected
     ## numbers, given their true rates and times open
-    n_ps <- rmultinom(1, n_p, prob = (int_t- rec_rates[2:(m_p+1), 2])*
+    n_ps <- stats::rmultinom(1, n_p, prob = (int_t- rec_rates[2:(m_p+1), 2])*
                         rec_rates[2:(m_p+1), 6])
     
     # Create a data frame storing the sites open at interim, the numbers 
