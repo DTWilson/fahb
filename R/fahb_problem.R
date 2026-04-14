@@ -25,7 +25,7 @@ fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
                          so_hps = c(30, 2.85), 
                          mean_rr_hps = c(2, 0.329), 
                          sd_rr_hps = c(30, 100),
-                         n_sims = 10^2){
+                         n_sims = 10^4){
   # Defaults from our GUSTO example
   
   # Check inputs make sense
