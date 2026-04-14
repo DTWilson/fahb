@@ -34,11 +34,49 @@ fahb_design <- function(problem){
 print.fahb_design <- function(x, ...){
   cat("Standard progression criteria\n")
   cat("\n")
-  x$Prog_Crit_OCs
+  print(x$Prog_Crit_OCs)
   cat("\n")
   
   cat("Bayesian approximation\n")
   cat("\n")
-  x$Bayes_OCs
+  print(x$Bayes_OCs)
   cat("\n")
+  cat("FPR - False Positive Rate\n")
+  cat("FNR - False Negative Rate\n\n")
+  cat("n_p, m_p, r_p - Probabilistic thresholds for standard\n")
+  cat("                progression criteria on the number recruited,\n")
+  cat("                number of sites opened, and the recruitment rate\n")
+  cat("                (participants per site per year) respectively\n\n")
+  cat("T_p - Bayesian decision rule threshold for the posterior predictive\n")
+  cat("      expected time until full recruitment\n")
+}
+
+
+#' Plot operating characteristics of fahb designs
+#' 
+#' Takes an object of class `fahb_design` and plots the estimated operating 
+#' characteristics of decision rules - based on standard progression criteria,
+#' an approximate Bayesian analysis, or both.
+#' 
+#' @param x object of class `fahb_design` as produced by `fahb_design().`
+#' @param ... further arguments passed to or from other methods.
+#' 
+#' @return no return value, called for side effects.
+#' 
+#' @export
+plot.fahb_design <- function(x, ...){
+  PC_OCs <- x$Prog_Crit_OCs[,1:2]
+  PC_OCs$type <- "PC"
+  Bayes_OCs <- x$Bayes_OCs[,1:2]
+  Bayes_OCs$type <- "Bayes"
+  
+  all_OCs <- rbind(PC_OCs, Bayes_OCs)
+  
+  p <- ggplot2::ggplot(all_OCs, ggplot2::aes(FPR, FNR, colour = type)) + ggplot2::geom_step() +
+    ggplot2::scale_color_discrete(name = "Method") +
+    ggplot2::xlab("False Positive Rate") +
+    ggplot2::ylab("False Negative Rate") +
+    ggplot2::theme_minimal()
+  
+  return(p)
 }
