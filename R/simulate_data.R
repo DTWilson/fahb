@@ -1,4 +1,7 @@
-generate_data <- function(problem) {
+simulate_data <- function(beta_m, beta_s,
+                          v_sh, v_r,
+                          setup_r_a, setup_r_b,
+                          target_n, m, int_t){
   
   # True per year recruitment rates for each site
   ## Sample beta_0 from prior
@@ -16,26 +19,23 @@ generate_data <- function(problem) {
   rec_rates <- cond_sim(m, target_n, m, setup_r, lambdas)
   
   rec_time <- rec_rates[nrow(rec_rates), 3]
+
+  df <- site_dist(rec_rates, int_t)
   
-  if(internal){
-    # Get total number recruited at interim
-    df <- site_dist(rec_rates, int_t)
-    site_t <- int_t
-    
+  n_p <- sum(df$y)
+  m_p <- nrow(df)
+  if(nrow(df) == 1 & df$y[1] == 0){ 
+    n_p <- 0
+    m_p <- 0
+    r_p <- 0
   } else {
-    # If the pilot is external we generate a new set of data using the same 
-    # parameters
-    rec_rates_p <- cond_sim(m, target_n_p, m_p, setup_r, lambdas)
-    int_t <- min(int_t, rec_rates_p[nrow(rec_rates_p), 3])
-    site_t <- min(int_t, rec_rates_p[nrow(rec_rates_p), 2])
-    
-    df <- site_dist(rec_rates_p, int_t)
+    n_p <- sum(df$y)
+    m_p <- nrow(df)
+    r_p <- n_p / sum(df$t)
   }
   
   # Output the interim data and the time to reach target n
-  return(list(data = df, rec_time = rec_time, int_t = int_t, site_t = site_t))
-  
-  #generate_data(m=20, int_t=0.5, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=10, v_r=3.3, setup_r_a=10, setup_r_b=1)
+  return(c(rec_time, n_p, m_p, r_p))
 }
 
 cond_sim <- function(m, target_n, m_p,
