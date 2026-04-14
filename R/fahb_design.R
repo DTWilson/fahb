@@ -21,3 +21,24 @@ fahb_design <- function(problem){
 }
 
 
+#' Print a fahb design object
+#' 
+#' The default print method for a `fahb_design` object.
+#' 
+#' @param x object of class `fahb_design` as produced by `fahb_design()`.
+#' @param ... further arguments passed to or from other methods.
+#' 
+#' @return no return value, called for side effects.
+#' 
+#' @export
+print.fahb_design <- function(x, ...){
+  cat("Standard progression criteria\n")
+  cat("\n")
+  x$Prog_Crit_OCs
+  cat("\n")
+  
+  cat("Bayesian approximation\n")
+  cat("\n")
+  x$Bayes_OCs
+  cat("\n")
+}
