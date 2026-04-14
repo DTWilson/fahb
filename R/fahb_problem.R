@@ -1,11 +1,13 @@
-new_fahb_problem <- function(N, m, t, p_t, 
+new_fahb_problem <- function(N, m, t, rel_thr,
+                             p_t, exp_T, thr,
                              so_hp_a, so_hp_b,
                              mean_rr_hp_a, mean_rr_hp_b,
                              sd_rr_hp_a, sd_rr_hp_b,
                              n_sims,
                              sims){
   
-  structure(list(N=N, m=m, t=t, p_t=p_t,
+  structure(list(N=N, m=m, t=t, rel_thr=rel_thr,
+                 p_t=p_t, exp_T=exp_T, thr=thr,
                  so_hp_a=so_hp_a, so_hp_b=so_hp_b,
                  mean_rr_hp_a=mean_rr_hp_a, mean_rr_hp_b = mean_rr_hp_b,
                  sd_rr_hp_a=sd_rr_hp_a, sd_rr_hp_b=sd_rr_hp_b,
@@ -19,11 +21,11 @@ validate_fahb_problem <- function(y){
   return(TRUE)  
 }
 
-fahb_problem <- function(N = 320, m = 20 , t = 0.167,
+fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
                          so_hps = c(30, 2.85), 
                          mean_rr_hps = c(2, 0.329), 
                          sd_rr_hps = c(30, 100),
-                         n_sims = 10^3){
+                         n_sims = 10^2){
   # Defaults from our GUSTO example
   
   # Check inputs make sense
@@ -43,7 +45,11 @@ fahb_problem <- function(N = 320, m = 20 , t = 0.167,
   # Calculate p_t - the calendar time of the internal pilot analysis
   p_t <- exp_T*t
   
-  new_fahb_problem(N, m, t, p_t,
+  # Get the threshold of rec time which denotes feasibility
+  thr <- rel_thr*exp_T
+  
+  new_fahb_problem(N, m, t, rel_thr,
+                   p_t, exp_T, thr,
                    so_hp_a = so_hps[1], so_hp_b = so_hps[2],
                    mean_rr_hp_a = mean_rr_hps[1], mean_rr_hp_b = mean_rr_hps[2],
                    sd_rr_hp_a = sd_rr_hps[1], sd_rr_hp_b = sd_rr_hps[2],
