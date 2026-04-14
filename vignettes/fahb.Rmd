@@ -1,0 +1,37 @@
+---
+title: "fahb"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{fahb}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(fahb)
+```
+
+## Introduction
+
+Many trials fail to recruit the number of participants they need to answer their research question definitively. We generally want to identify these trials, which we call \emph{infeasible}, early on so that they can be stopped and their valuable resources used elsewhere. We often do this by specifying the first stage of a study the \emph{pilot phase}, or \emph{pilot trial}, looking at recruitment data once the pilot has finished and then deciding if we should continue for the remainder of the trial.
+
+Making a \emph{stop} or \emph{go} decision based on early recruitment data is not straightforward. We need to consider not just the number of participants recruited, but also how quickly sites are opening and how much variability there is between site recruitment rates. 
+
+## Example - GUSTO
+
+## Specifying the problem
+
+## Operating characteristics to inform design decisions
+
+## Analysing the pilot data
+
+## External pilots
+
+## References
