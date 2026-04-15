@@ -11,7 +11,7 @@ new_fahb_design <- function(problem,
 #' These can include rules of the standard "progression criteria form", or rules
 #' based on a Bayesian analysis of the pilot trial data, or both. 
 #'
-#' @param problem 
+#' @param problem an object of class `fahb_problem`.
 #'
 #' @returns an object of class `fahb_design`.
 #' @export

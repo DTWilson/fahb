@@ -4,14 +4,14 @@
 \alias{forecast}
 \title{Generate probabilistic forecasts of trial recruitment}
 \usage{
-forecast(problem, n_sims = 10^4, rewrite = FALSE)
+forecast(problem, n_sims = 10^4, overwrite = FALSE)
 }
 \arguments{
 \item{problem}{an object of class \code{fahb_problem}.}
 
 \item{n_sims}{number of replicates to use in the simulation.}
 
-\item{rewrite}{boolean indicating if we want to overwrite any simulation data
+\item{overwrite}{boolean indicating if we want to overwrite any simulation data
 currently held (defaults to FALSE).}
 }
 \value{

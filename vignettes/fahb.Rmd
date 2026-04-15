@@ -10,7 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = FALSE
 )
 ```
 
@@ -71,14 +72,14 @@ A couple of things to flag here:
 It is generally helpful to visualise prior densities to check they align with our prior beliefs, and `fahb` will elp you do that via the `check_priors()` function. In addition to densities of the three substantive parameters $\lambda, \beta$ and $\sigma$, it will also plot the implied prior distribution of the recruitment rate at a randomly selected site.
 
 ```{r}
-#check_priors(problem)
+check_priors(problem)
 ```
 
 ## Operating characteristics to inform design decisions
 
 Internal pilots are often accompanied by pre-specified thresholds on three measures of recruitment: the total number recruited, the number of sites opened, and the recruitment rate (per site, per year). These thresholds guide the progression decision, suggesting we keep going only of all three are exceeded.
 
-These thresholds can be hard to choose, but `fahb` can help us by searching for thresholds which produce good operating characteristics (OCs). We have proposed that some helpful OCs are the false positive rate (FPR) and the false negative rate (FNR); the probability of progressing (stopping) given that the trial is truly infeasible (feasible). We estimate these OCs by simulating lots (well, `n_sims`) trials and comparing their true feasibility (as dictated by `rel_thr`) and the progression decision made by the decision rule.
+These thresholds can be hard to choose, but `fahb` can help us by searching for thresholds which produce good operating characteristics (OCs). We have proposed that some helpful OCs are the false positive rate (FPR) and the false negative rate (FNR); the probability of progressing (stopping) given that the trial is truly infeasible (feasible). We estimate these OCs by simulating `n_sims` trials and comparing their true feasibility (as dictated by `rel_thr`) and the progression decision made by the decision rule.
 
 An alternative form of decision rule is based on a Bayesian analysis of the pilot data and the resulting expectation of the posterior predictive distribution of the time to recruit. This rule is simpler in the sense that there is only one threshold to specify. If the expected recruitment time exceeds this then we should stop, but otherwise we can continue.
 
@@ -103,9 +104,9 @@ design$Prog_Crit_OCs[design$Prog_Crit_OCs$FPR == 0.2,]
 design$Bayes_OCs[design$Bayes_OCs == 0.2,]
 ```
 
-That is, the standard progression criteria tell us we should proceed only if we recruit at least 6 participants from at least 3 sites, with a overall rate of at least 6.49. We get very similar OCs if instead we run a Bayesian analysis and proceed only if the expected time to recruit is under 3.29 years. Note that many of the suggested progression criteria have negative compents which will always be exceeded and are therefore redundant.
+That is, the standard progression criteria tell us we should proceed only if we recruit at least 6 participants from at least 3 sites, with a overall rate of at least 6.49. We get very similar OCs if instead we run a Bayesian analysis and proceed only if the expected time to recruit is under 3.29 years. Note that many of the suggested progression criteria have negative components which will always be exceeded and are, therefore, redundant.
 
-If we want to improve the OCs, we need more information in the internal pilot. For example, we wait until time $t = 12/36$:
+If we want to improve the OCs, we need more information in the internal pilot. For example, we could instead wait until time $t = 12/36$:
 
 ```{r}
 problem <- fahb_problem(N = 320, m = 20 , t = 0.336, rel_thr = 1.2, 
@@ -126,6 +127,14 @@ design$Prog_Crit_OCs[design$Prog_Crit_OCs$FPR == 0.2,]
 
 
 ## Analysing the pilot data
+
+After we have collected the pilot data, we need to analyse it and make our progression decision. If we have pre-specified standard progression criteria, this is trivial - we just calculate the three summary measures and check if they have all exceeded our chosen thresholds.
+
+If we are making decisions using the Bayesian approach, the analysis is more involved. We need to take our recruitment data and use it to estimate the posterior distribution of the three parameters in our model ($\lambda, \beta$ and $\sigma$). We then need to use these posteriors to estimate the prior predictive distribution of the time until full recruitment, $T$.
+
+
+
+
 
 ## External pilots
 

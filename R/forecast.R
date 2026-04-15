@@ -2,7 +2,7 @@
 #'
 #' @param problem an object of class `fahb_problem`.
 #' @param n_sims number of replicates to use in the simulation.
-#' @param rewrite boolean indicating if we want to overwrite any simulation data
+#' @param overwrite boolean indicating if we want to overwrite any simulation data
 #' currently held (defaults to FALSE).
 #'
 #' @returns an object of class `fahb_problem`.
@@ -12,13 +12,13 @@
 #' problem <- fahb_problem()
 #' forecast(fahb_problem)
 #' 
-forecast <- function(problem, n_sims = 10^4, rewrite = FALSE){
+forecast <- function(problem, n_sims = 10^4, overwrite = FALSE){
   
-  if(!is.null(problem$sims) & !rewrite){
+  if(!is.null(problem$sims) & !overwrite){
     stop("Forecasts have been simulated already - to discard, use rewrite = TRUE")
   }
   
-  r <- t(replicate(problem$n_sims, 
+  r <- t(replicate(n_sims, 
                     simulate_data(beta_m=problem$mean_rr_hp_a, beta_s=problem$mean_rr_hp_b,
                                   v_sh=problem$sd_rr_hp_a, v_r=problem$sd_rr_hp_b,
                                   setup_r_a=problem$so_hp_a, setup_r_b=problem$so_hp_b,
