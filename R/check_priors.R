@@ -18,8 +18,8 @@ check_priors <- function(problem){
 
 plot_gamma_prior <- function(shape, rate, par_name){
   
-  lower <- max(0, shape/rate - 3*(shape/rate^2))
-  upper <- shape/rate + 3*(shape/rate^2)
+  lower <- max(0, shape/rate - 4*sqrt(shape/rate^2))
+  upper <- shape/rate + 4*sqrt(shape/rate^2)
   
   x <- seq(lower, upper, length.out = 10^3)
   df <- data.frame(x = x,
@@ -34,8 +34,8 @@ plot_gamma_prior <- function(shape, rate, par_name){
 
 plot_normal_prior <- function(mean, sd, par_name){
   
-  lower <- mean - 3*sd
-  upper <- shape/rate + 3*(shape/rate^2)
+  lower <- mean - 4*sd
+  upper <- mean + 4*sd
   
   x <- seq(lower, upper, length.out = 10^3)
   df <- data.frame(x = x,
@@ -59,6 +59,8 @@ plot_rr_prior_predictive <- function(problem){
     ggplot2::ylab("Prior pred. prob.") +
     ggplot2::xlim(as.numeric(stats::quantile(df$gamma, c(0.001, 0.999)))) +
     ggplot2::theme_minimal()
+  
+  return(p)
 }
   
   
