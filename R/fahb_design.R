@@ -5,6 +5,21 @@ new_fahb_design <- function(problem,
             class = "fahb_design")
 }
 
+#' Build a `fahb_design` object
+#' 
+#' Given a `fahb_problem` object, find efficient progression decision rules. 
+#' These can include rules of the standard "progression criteria form", or rules
+#' based on a Bayesian analysis of the pilot trial data, or both. 
+#'
+#' @param problem 
+#'
+#' @returns an object of class `fahb_design`.
+#' @export
+#'
+#' @examples
+#' problem <- forecast(fahb_problem())
+#' fahb_design(problem)
+#' 
 fahb_design <- function(problem){
   if(is.null(problem$sims)){
     stop("Problem does not contain trial simulations - see fahb::forecast()")

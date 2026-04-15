@@ -1,4 +1,18 @@
-forecast <- function(problem, rewrite = FALSE){
+#' Generate probabilistic forecasts of trial recruitment
+#'
+#' @param problem an object of class `fahb_problem`.
+#' @param n_sims number of replicates to use in the simulation.
+#' @param rewrite boolean indicating if we want to overwrite any simulation data
+#' currently held (defaults to FALSE).
+#'
+#' @returns an object of class `fahb_problem`.
+#' @export
+#'
+#' @examples
+#' problem <- fahb_problem()
+#' forecast(fahb_problem)
+#' 
+forecast <- function(problem, n_sims = 10^4, rewrite = FALSE){
   
   if(!is.null(problem$sims) & !rewrite){
     stop("Forecasts have been simulated already - to discard, use rewrite = TRUE")

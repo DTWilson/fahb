@@ -1,3 +1,18 @@
+#' Plot prior distributions
+#' 
+#' Given the hyperparameters encoded in a `fahb_problem` object, return plots of
+#' the three prior distributions and a plot of the prior predictive distribution
+#' of the recruitment rate at a randomly selected site.
+#'
+#' @param problem an object of class `fahb_problem`.
+#'
+#' @returns a list of `ggplot2` plots.
+#' @export
+#'
+#' @examples
+#' problem <- fahb_problem()
+#' check_priors(problem)
+#' 
 check_priors <- function(problem){
   # Plot prior densities for the three model parameters, and the prior 
   # predictive densities for the recruitment rate at a random site and

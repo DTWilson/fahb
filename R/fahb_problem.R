@@ -3,7 +3,6 @@ new_fahb_problem <- function(N, m, t, rel_thr,
                              so_hp_a, so_hp_b,
                              mean_rr_hp_a, mean_rr_hp_b,
                              sd_rr_hp_a, sd_rr_hp_b,
-                             n_sims,
                              sims){
   
   structure(list(N=N, m=m, t=t, rel_thr=rel_thr,
@@ -11,9 +10,8 @@ new_fahb_problem <- function(N, m, t, rel_thr,
                  so_hp_a=so_hp_a, so_hp_b=so_hp_b,
                  mean_rr_hp_a=mean_rr_hp_a, mean_rr_hp_b = mean_rr_hp_b,
                  sd_rr_hp_a=sd_rr_hp_a, sd_rr_hp_b=sd_rr_hp_b,
-                 n_sims=n_sims,
                  sims=sims),
-            class = "fahb")
+            class = "fahb_problem")
 }
 
 validate_fahb_problem <- function(y){
@@ -21,11 +19,32 @@ validate_fahb_problem <- function(y){
   return(TRUE)  
 }
 
+#' Build a `fahb_problem` object
+#' 
+#' Given a trial design and a set of model hyperparameters, build an object
+#' of class `fahb_problem`.
+#'
+#' @param N target sample size.
+#' @param m number of recruiting sites.
+#' @param t timing of the internal pilot analysis, as a proportion of the 
+#' expected time to recruit.
+#' @param rel_thr threshold which discriminates feasible and infeasible trials,
+#'  as a multiple of the expected time to recruit.
+#' @param so_hps site opening rate hyperparameters (shape and rate for a Gamma prior).
+#' @param mean_rr_hps mean site recruitment rate hyperparameters (mean and sd 
+#' for a lognormal prior).
+#' @param sd_rr_hps variance in site recruitment rates hyperparameters (shape 
+#' and rate for a Gamma prior).
+#'
+#' @returns an object of class `fahb_problem`
+#' @export
+#'
+#' @examples fahb_problem()
+#' 
 fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
                          so_hps = c(30, 2.85), 
                          mean_rr_hps = c(2, 0.329), 
-                         sd_rr_hps = c(30, 100),
-                         n_sims = 10^4){
+                         sd_rr_hps = c(30, 100)){
   # Defaults from our GUSTO example
   
   # Check inputs make sense
@@ -53,7 +72,6 @@ fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
                    so_hp_a = so_hps[1], so_hp_b = so_hps[2],
                    mean_rr_hp_a = mean_rr_hps[1], mean_rr_hp_b = mean_rr_hps[2],
                    sd_rr_hp_a = sd_rr_hps[1], sd_rr_hp_b = sd_rr_hps[2],
-                   n_sims,
                    sims = NULL)
   
   }
