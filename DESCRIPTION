@@ -17,5 +17,6 @@ Imports:
     brms,
     ggplot2,
     mco,
-    mgcv
+    mgcv,
+    posterior
 VignetteBuilder: knitr
