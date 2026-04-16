@@ -2,12 +2,12 @@
 % Please edit documentation in R/fahb_design.R
 \name{fahb_design}
 \alias{fahb_design}
-\title{Build a \code{fahb_design} object}
+\title{Build a \code{fahb} design object}
 \usage{
 fahb_design(problem)
 }
 \arguments{
-\item{problem}{}
+\item{problem}{an object of class \code{fahb_problem}.}
 }
 \value{
 an object of class \code{fahb_design}.

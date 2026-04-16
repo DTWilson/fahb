@@ -1,6 +1,7 @@
 new_fahb_design <- function(problem,
                             PC_OCs, Bayes_OCs){
-  structure(list(Prog_Crit_OCs = PC_OCs,
+  structure(list(problem = problem,
+                 Prog_Crit_OCs = PC_OCs,
                  Bayes_OCs = Bayes_OCs),
             class = "fahb_design")
 }

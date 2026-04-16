@@ -22,6 +22,6 @@ Generate probabilistic forecasts of trial recruitment
 }
 \examples{
 problem <- fahb_problem()
-forecast(fahb_problem)
+problem <- forecast(problem)
 
 }

@@ -39,7 +39,8 @@ validate_fahb_problem <- function(y){
 #' @returns an object of class `fahb_problem`
 #' @export
 #'
-#' @examples fahb_problem()
+#' @examples 
+#' fahb_problem()
 #' 
 fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
                          so_hps = c(30, 2.85), 
@@ -54,8 +55,8 @@ fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
   if(t < 0 | t > 1){
     stop("t must be in [0,1]")
   }
-  if(any(c(so_hps, mean_rr_hps, sd_rr_hps) < 0)){
-    stop("All yperparameters must be > 0")
+  if(any(c(so_hps, mean_rr_hps, sd_rr_hps) <= 0)){
+    stop("All hyperparameters must be > 0")
   }
   
   # Calculate exp_T - the expected time for trial to recruit

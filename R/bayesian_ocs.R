@@ -1,4 +1,8 @@
 bayesian_ocs <- function(problem){
+  if(is.null(problem$sims)){
+    stop("Simulations are missing - run forecast()")
+  }
+  
   df <- problem$sims
   fit <- mgcv::gam(rec_T ~ ti(n_p) + ti(m_p) + ti(r_p) + ti(m_p, n_p), data = df)
   df$pred_T <- mgcv::predict.gam(fit)

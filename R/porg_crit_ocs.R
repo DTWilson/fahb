@@ -1,6 +1,10 @@
 
 prog_crit_ocs <- function(problem){
   
+  if(is.null(problem$sims)){
+    stop("Simulations are missing - run forecast()")
+  }
+  
   df <- problem$sims
   df <- cbind(df, matrix(stats::runif(2*nrow(df)), ncol=2))
   
