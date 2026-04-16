@@ -2,7 +2,7 @@
 prog_crit_ocs <- function(problem){
   
   df <- problem$sims
-  df <- cbind(df, matrix(stats::runif(2*problem$n_sims), ncol=2))
+  df <- cbind(df, matrix(stats::runif(2*nrow(df)), ncol=2))
   
   max_m_p <- max(df$m_p)
   max_n_p <- max(df$n_p)

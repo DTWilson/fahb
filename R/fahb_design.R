@@ -5,7 +5,7 @@ new_fahb_design <- function(problem,
             class = "fahb_design")
 }
 
-#' Build a `fahb_design` object
+#' Build a `fahb` design object
 #' 
 #' Given a `fahb_problem` object, find efficient progression decision rules. 
 #' These can include rules of the standard "progression criteria form", or rules

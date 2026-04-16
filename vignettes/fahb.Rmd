@@ -61,15 +61,12 @@ Pre-trial feasibility assessments of recruiting sites led to an estimated total 
 problem <- fahb_problem(N = 320, m = 20 , t = 0.167, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
-                        sd_rr_hps = c(30, 100),
-                        n_sims = 10^4)
+                        sd_rr_hps = c(30, 100))
 ```
-A couple of things to flag here:
 
-- We have tried to use meaningful names for the function arguments, splitting the hyperparameters into 3 2-element vectors. `so_hps` are for the site opening rate $\lambda$ (i.e. $\delta$ and $\epsilon$); `mean_rr_hps` are for the central parameter of the recruitment rate distribution $\beta$ (i.e. $\mu$ and $\nu$); and `sd_rr_hps` for the corresponding dispersion parameter $\sigma$ (i.e. $\rho$ and $\pi$).
-- We have one more argument here, `n_sims`, which tells us how many simulations we want to run. The role of these simulations will become clear in the next section.
+We have tried to use meaningful names for the function arguments, splitting the hyperparameters into 3 2-element vectors. `so_hps` are for the site opening rate $\lambda$ (i.e. $\delta$ and $\epsilon$); `mean_rr_hps` are for the central parameter of the recruitment rate distribution $\beta$ (i.e. $\mu$ and $\nu$); and `sd_rr_hps` for the corresponding dispersion parameter $\sigma$ (i.e. $\rho$ and $\pi$).
 
-It is generally helpful to visualise prior densities to check they align with our prior beliefs, and `fahb` will elp you do that via the `check_priors()` function. In addition to densities of the three substantive parameters $\lambda, \beta$ and $\sigma$, it will also plot the implied prior distribution of the recruitment rate at a randomly selected site.
+It is generally helpful to visualise prior densities to check they align with our prior beliefs, and `fahb` will help you do that via the `check_priors()` function. In addition to densities of the three substantive parameters $\lambda, \beta$ and $\sigma$, it will also plot the implied prior distribution of the recruitment rate at a randomly selected site.
 
 ```{r}
 check_priors(problem)
@@ -112,8 +109,7 @@ If we want to improve the OCs, we need more information in the internal pilot. F
 problem <- fahb_problem(N = 320, m = 20 , t = 0.336, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
-                        sd_rr_hps = c(30, 100),
-                        n_sims = 10^4)
+                        sd_rr_hps = c(30, 100))
 
 # Run the simulations
 problem <- forecast(problem)
@@ -141,10 +137,15 @@ t_pilot <- c(0.5, 0.4, 0.3, 0.2)
 analysis <- fahb_analysis(n_pilot, t_pilot, problem)
 ```
 
+We can use `print()` and `plot()` methods to summarise results, although note that the posterior predictive samples and the `brmsfit` model are both held within the analysis object so the user can summarise results in other ways if they please.
 
-
-
+```{r}
+print.fahb_analysis(analysis)
+plot.fahb_analysis(analysis)
+```
 
 ## External pilots
+
+To do - implement extension to the external pilot setting.
 
 ## References

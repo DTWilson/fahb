@@ -7,6 +7,23 @@ new_fahb_analysis <- function(PC_stats, Bayes_stats,
             class = "fahb_analysis")
 }
 
+#' Build a `fahb` analysis object
+#' 
+#' Given a `fahb_problem` object calculate summary statistics which can inform
+#' progression decisions. These include both standard progression criteria 
+#' statistics, and the expectation of the posterior predictive distribution of 
+#' the time until the trial recruits.
+#'
+#' @param n_pilot integer vector of numbers recruited at each open site.
+#' @param t_pilot numeric vector of time (in years) each site has been open.
+#' @param problem object of class `fahb_problem`.
+#' @param bayes_model optional object of class `brmsfit` which will be used in
+#' the Bayesian analysis via `brms::update()` to avoid compiling a new model.
+#'
+#' @returns An object of class `fahb_analysis`
+#' @export
+#'
+#' @examples
 fahb_analysis <- function(n_pilot, t_pilot,
                           problem, 
                           bayes_model = NULL){
@@ -22,6 +39,10 @@ fahb_analysis <- function(n_pilot, t_pilot,
     cat("Compiling the model...")
     bayes_model <- compile_bayes_model(n_pilot, t_pilot, problem)
   }
+  
+  int_data <- data.frame(y = n_pilot,
+                         t = t_pilot,
+                         c = 1:length(n_pilot))
   
   # Generate posterior samples
   output <- capture.output(fit <- suppressWarnings(update(bayes_model, 
@@ -53,8 +74,8 @@ fahb_analysis <- function(n_pilot, t_pilot,
     us <- cbind(us, exp(r$c[,1:m_p,1] + beta_0))
     
     # For site setup rates we have a simple conjugate analysis
-    setup_r_a1 <- setup_r_a + m_p
-    setup_r_b1 <- setup_r_b + problem$p_t
+    setup_r_a1 <- problem$so_hp_a + m_p
+    setup_r_b1 <- problem$so_hp_b + problem$p_t
     
     # We can then generate samples from the posterior of setup rate
     setup_rates <- stats::rgamma(nrow(us), setup_r_a1, setup_r_b1)
@@ -123,7 +144,7 @@ post_pred_rec_time <- function(post_samples, m, target_n){
   ## First get the vector of expected numbers recruited in each period
   exp_rec <- (rec_rates[,3]*(rec_rates[,2] - rec_rates[,1]))[2:(m+1)]
   ## Now sample from a Poisson for each period
-  rec_rates <- cbind(rec_rates, c(0, rpois(m, exp_rec)))
+  rec_rates <- cbind(rec_rates, c(0, stats::rpois(m, exp_rec)))
   
   # Get time at which total target n is hit
   ## First get the period when it happens
@@ -161,4 +182,68 @@ compile_bayes_model <- function(n_pilot, t_pilot,
                      chains = 0, silent = 2)
   
   return(bayes_model)
+}
+
+#' Print a `fahb` analysis object
+#' 
+#' The default print method for a `fahb_analysis` object.
+#' 
+#' @param x object of class `fahb_analysis` as produced by `fahb_analysis()`.
+#' @param ... further arguments passed to or from other methods.
+#' 
+#' @return no return value, called for side effects.
+#' 
+#' @export
+print.fahb_analysis <- function(x, ...){
+  cat("Standard progression criteria statistics:\n")
+  print(x$PC_stats)
+  cat("\n")
+  cat("Expected posterior predictive time to recruit:\n")
+  print(x$Bayes_stats)
+  cat("\n")
+  cat("Posterior predictive distribution quantiles:\n")
+  print(stats::quantile(x$PP_rec_times, c(0.005, 0.025, 0.2, 0.5, 0.8, 0.975, 0.995)))
+  cat("\n")
+  cat("Posterior site opening rate hyperparamaters (Gamma):\n")
+  print(c(shape = x$so_post_hps[1], rate = x$so_post_hps[2]))
+  cat("\n")
+}
+
+
+#' Plot posterior distributions from a `fahb` analysis
+#' 
+#' Takes an object of class `fahb_analysis` and plots the posterior 
+#' distributions of the predicted time for the trial to recruit and of the three
+#' model parameters.
+#' 
+#' @param x object of class `fahb_analysis` as produced by `fahb_analysis().`
+#' @param ... further arguments passed to or from other methods.
+#' 
+#' @return no return value, called for side effects.
+#' 
+#' @export
+plot.fahb_analysis <- function(x, ...){
+  
+  p1 <- plot_post_samples(x$PP_rec_times, "Predicted time to recruit")
+  p2 <- plot_gamma_prior(shape = x$so_post_hps[1], rate = x$so_post_hps[2], 
+                         par_name = "Site opening rate", post = TRUE)
+  
+  s <- brms::as_draws(x$model_fit)
+  beta_0 <- posterior::extract_variable(s, "b_Intercept")
+  sd_r <- posterior::extract_variable(s, "sd_c__Intercept")
+  
+  p3 <- plot_post_samples(beta_0, "Mean of log(recruitment rate)")
+  p4 <- plot_post_samples(sd_r, "S.D. of log(recruitment rate)")
+  
+  return(c(p1, p2, p3, p4))
+}
+
+plot_post_samples <- function(samples, par_name){
+  df <- data.frame(x = samples)
+  ggplot2::ggplot(df, ggplot2::aes(x=x)) +
+  ggplot2::geom_density() +
+    ggplot2::xlab(par_name) +
+    ggplot2::ylab("Posterior prob.") +
+    ggplot2::xlim(as.numeric(stats::quantile(df$gamma, c(0.0001, 0.9999)))) +
+    ggplot2::theme_minimal()
 }

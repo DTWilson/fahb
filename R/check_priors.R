@@ -31,7 +31,7 @@ check_priors <- function(problem){
               p_pp_rr))
 }
 
-plot_gamma_prior <- function(shape, rate, par_name){
+plot_gamma_prior <- function(shape, rate, par_name, post = FALSE){
   
   lower <- max(0, shape/rate - 4*sqrt(shape/rate^2))
   upper <- shape/rate + 4*sqrt(shape/rate^2)
@@ -41,8 +41,13 @@ plot_gamma_prior <- function(shape, rate, par_name){
                    pr = stats::dgamma(x, shape, rate=rate))
   
   p <- ggplot2::ggplot(df, ggplot2::aes(x, pr)) + ggplot2::geom_line() +
-    ggplot2::xlab(par_name) + ggplot2::ylab("Prior prob.") +
+    ggplot2::xlab(par_name) +
     ggplot2::theme_minimal()
+  if(post){ 
+    p <- p + ggplot2::ylab("Posterior prob.")
+  } else {
+    p <- p + ggplot2::ylab("Prior prob.")
+  }
     
   return(p)
 }
