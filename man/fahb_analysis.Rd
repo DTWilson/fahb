@@ -4,7 +4,7 @@
 \alias{fahb_analysis}
 \title{Build a \code{fahb} analysis object}
 \usage{
-fahb_analysis(n_pilot, t_pilot, problem, bayes_model = NULL)
+fahb_analysis(n_pilot, t_pilot, problem, site_t = NULL, bayes_model = NULL)
 }
 \arguments{
 \item{n_pilot}{integer vector of numbers recruited at each open site.}
@@ -12,6 +12,9 @@ fahb_analysis(n_pilot, t_pilot, problem, bayes_model = NULL)
 \item{t_pilot}{numeric vector of time (in years) each site has been open.}
 
 \item{problem}{object of class \code{fahb_problem}.}
+
+\item{site_t}{In the case of an external pilot, the time taken for all
+pilot sites to open.}
 
 \item{bayes_model}{optional object of class \code{brmsfit} which will be used in
 the Bayesian analysis via \code{brms::update()} to avoid compiling a new model.}

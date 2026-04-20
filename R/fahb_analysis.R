@@ -17,6 +17,8 @@ new_fahb_analysis <- function(PC_stats, Bayes_stats,
 #' @param n_pilot integer vector of numbers recruited at each open site.
 #' @param t_pilot numeric vector of time (in years) each site has been open.
 #' @param problem object of class `fahb_problem`.
+#' @param site_t In the case of an external pilot, the time taken for all 
+#' pilot sites to open.
 #' @param bayes_model optional object of class `brmsfit` which will be used in
 #' the Bayesian analysis via `brms::update()` to avoid compiling a new model.
 #'
@@ -35,9 +37,17 @@ new_fahb_analysis <- function(PC_stats, Bayes_stats,
 #' print(analysis)
 #' plot(analysis)
 #' }
-fahb_analysis <- function(n_pilot, t_pilot,
+fahb_analysis <- function(n_pilot, t_pilot, 
                           problem, 
+                          site_t = NULL,
                           bayes_model = NULL){
+  
+  if(is.null(site_t)){
+    site_t <- problem$p_t
+    if(!problem$internal){
+      stop("External pilots require site_t to be specified")
+    }
+  }
   
   if(length(n_pilot) != length(t_pilot)){
     stop("Lengths of n_pilot and t_pilot must match")
@@ -91,11 +101,12 @@ fahb_analysis <- function(n_pilot, t_pilot,
     
     # For site setup rates we have a simple conjugate analysis
     setup_r_a1 <- problem$so_hp_a + m_p
-    setup_r_b1 <- problem$so_hp_b + problem$p_t
+    setup_r_b1 <- problem$so_hp_b + site_t
     
     # We can then generate samples from the posterior of setup rate
     setup_rates <- stats::rgamma(nrow(us), setup_r_a1, setup_r_b1)
     
+    if(problem$internal){
       # Now sample actual site setup times from the posterior predictive
       setup_times <- t(sapply(setup_rates, function(x) cumsum(stats::rexp(m-m_p, x))))
       if(m-m_p == 1) setup_times <- t(setup_times)
@@ -107,6 +118,15 @@ fahb_analysis <- function(n_pilot, t_pilot,
       
       rec_times <- apply(site_matrix, 1, post_pred_rec_time, 
                          m=m, target_n=(problem$N - n_p)) + problem$p_t
+    } else {
+      # For external, we want setup times for all m sites
+      setup_times <- t(sapply(setup_rates, function(x) cumsum(stats::rexp(m, x))))
+      
+      site_matrix <- cbind(us, setup_times)
+      
+      rec_times <- apply(site_matrix, 1, post_pred_rec_time, 
+                         m=m, target_n=problem$N)
+    }
     
   } else {
     # Case where all sites in the main have also opened in the pilot
@@ -115,6 +135,7 @@ fahb_analysis <- function(n_pilot, t_pilot,
     r <- brms::ranef(fit, summary = F)
     us <- exp(r$c[,1:m_p,1] + beta_0)
     
+    if(problem$internal){
       # Add pilot sites using a setup time of 0
       setup_times <- matrix(rep(0, m_p*nrow(us)), ncol = m_p)
       
@@ -122,6 +143,15 @@ fahb_analysis <- function(n_pilot, t_pilot,
       
       rec_times <- apply(site_matrix, 1, post_pred_rec_time, 
                          m=m, target_n=(problem$N - n_p)) + problem$p_t
+    } else {
+      # For external, we want setup times for all m sites
+      setup_times <- t(sapply(setup_rates, function(x) cumsum(stats::rexp(m, x))))
+      
+      site_matrix <- cbind(us, setup_times)
+      
+      rec_times <- apply(site_matrix, 1, post_pred_rec_time, 
+                         m=m, target_n=problem$N)
+    }
   }
   
   new_fahb_analysis(c(n_p=n_p, m_p=m_p, r_p=r_p), c(exp_pp_T=mean(rec_times)),

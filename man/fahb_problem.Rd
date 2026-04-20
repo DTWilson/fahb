@@ -7,7 +7,9 @@
 fahb_problem(
   N = 320,
   m = 20,
-  t = 0.167,
+  t_int = 0.167,
+  n_ext = NULL,
+  m_ext = NULL,
   rel_thr = 1.2,
   so_hps = c(30, 2.85),
   mean_rr_hps = c(2, 0.329),
@@ -19,8 +21,12 @@ fahb_problem(
 
 \item{m}{number of recruiting sites.}
 
-\item{t}{timing of the internal pilot analysis, as a proportion of the
+\item{t_int}{timing of an internal pilot analysis, as a proportion of the
 expected time to recruit.}
+
+\item{n_ext}{number of participants to recruit to an external pilot.}
+
+\item{m_ext}{number of sites to open in an external pilot.}
 
 \item{rel_thr}{threshold which discriminates feasible and infeasible trials,
 as a multiple of the expected time to recruit.}

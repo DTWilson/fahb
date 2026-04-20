@@ -158,14 +158,32 @@ plots <- plot(analysis)
 
 ## External pilots
 
-By default `fahb` assumes an internal pilot, but we can use it for external pilots too. For example, suppose we use the same model as in the GUSTO example. Now we assume the external pilot will run from three sites until either 60 participants have been recruited or we reach a time of `t_int = 0.5` of the expected recruitment time of the main trial.
+By default `fahb` assumes an internal pilot, but we can use it for external pilots too. For example, suppose we use the same model as in the GUSTO example. Now we assume the external pilot will run from three sites until either 60 participants have been recruited or we reach a time of `t_int = 0.33` of the expected recruitment time of the main trial.
 
 ```{r}
-problem <- fahb_problem(n_ext = 60, m_ext = 12, t_int = 0.16)
+problem <- fahb_problem(n_ext = 80, m_ext = 6, t_int = 0.33)
 
 problem <- forecast(problem)
 
 design <- fahb_design(problem)
+
+plot(design)
+design
+```
+
+And analysis:
+
+```{r}
+n_pilot <- c(4, 8, 0, 2)
+t_pilot <- c(0.5, 0.4, 0.3, 0.2)
+site_t <- 0.6
+
+analysis <- fahb_analysis(n_pilot, t_pilot, problem, site_t)
+
+print(analysis)
+
+plots <- plot(analysis)
+(plots[[1]] + plots[[2]]) / (plots[[3]] + plots[[4]])
 ```
 
 ## References
