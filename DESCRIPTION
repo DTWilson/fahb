@@ -23,5 +23,6 @@ Imports:
     ggplot2,
     mco,
     mgcv,
-    posterior
+    posterior,
+    rlang
 VignetteBuilder: knitr

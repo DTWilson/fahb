@@ -17,11 +17,23 @@ fahb_analysis(n_pilot, t_pilot, problem, bayes_model = NULL)
 the Bayesian analysis via \code{brms::update()} to avoid compiling a new model.}
 }
 \value{
-An object of class \code{fahb_analysis}
+An object of class \code{fahb_analysis}.
 }
 \description{
 Given a \code{fahb_problem} object calculate summary statistics which can inform
 progression decisions. These include both standard progression criteria
 statistics, and the expectation of the posterior predictive distribution of
 the time until the trial recruits.
+}
+\examples{
+\dontrun{
+problem <- forecast(problem, n_sims = 500)
+
+n_pilot <- c(3, 5, 2)
+t_pilot <- c(0.5, 0.6, 0.4)
+
+analysis <- fahb_analysis(n_pilot, t_pilot, problem)
+print(analysis)
+plot(analysis)
+}
 }

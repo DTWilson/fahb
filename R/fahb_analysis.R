@@ -20,10 +20,21 @@ new_fahb_analysis <- function(PC_stats, Bayes_stats,
 #' @param bayes_model optional object of class `brmsfit` which will be used in
 #' the Bayesian analysis via `brms::update()` to avoid compiling a new model.
 #'
-#' @returns An object of class `fahb_analysis`
+#' @returns An object of class `fahb_analysis`.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#` problem <- fahb_problem()
+#' problem <- forecast(problem, n_sims = 500)
+#'
+#' n_pilot <- c(3, 5, 2)
+#' t_pilot <- c(0.5, 0.6, 0.4)
+#'
+#' analysis <- fahb_analysis(n_pilot, t_pilot, problem)
+#' print(analysis)
+#' plot(analysis)
+#' }
 fahb_analysis <- function(n_pilot, t_pilot,
                           problem, 
                           bayes_model = NULL){
@@ -41,7 +52,7 @@ fahb_analysis <- function(n_pilot, t_pilot,
   
   # Fit a Bayesian model
   if(is.null(bayes_model)){
-    cat("Compiling the model...")
+    message("Compiling the model...")
     bayes_model <- compile_bayes_model(n_pilot, t_pilot, problem)
   }
   
@@ -50,13 +61,13 @@ fahb_analysis <- function(n_pilot, t_pilot,
                          c = 1:length(n_pilot))
   
   # Generate posterior samples
-  output <- utils::capture.output(fit <- suppressWarnings(brms::update(bayes_model, 
+  output <- utils::capture.output(fit <- stats::update(bayes_model, 
                                                           backend = "cmdstanr",
                                                           recompile = FALSE, 
                                                           newdata = int_data, 
                                                           iter = 3000, 
                                                           warmup = 500,
-                                                          control = list(adapt_delta = 0.95))))
+                                                          control = list(adapt_delta = 0.95)))
   
   # Get vectors of posterior samples for the mean and SD parameters of the 
   # log-normal model for site recruitment rates
@@ -174,9 +185,14 @@ compile_bayes_model <- function(n_pilot, t_pilot,
     brms::stanvar(beta_s, name='beta_s') + 
     brms::stanvar(v_sh, name='v_sh') + brms::stanvar(v_r, name='v_r')
   
-  bprior <- c(brms::prior(normal(beta_m, beta_s), class = "Intercept"),
-              brms::prior(gamma(v_sh, v_r), class = "sd"))
-  
+  bprior <- c(
+    brms::set_prior(
+      paste0("normal(", beta_m, ", ", beta_s, ")"), 
+      class = "Intercept"),
+    brms::set_prior(
+      paste0("gamma(", v_sh, ", ", v_r, ")"),
+      class = "sd"))
+    
   int_data <- data.frame(y = n_pilot,
                      t = t_pilot,
                      c = 1:length(n_pilot))
@@ -245,7 +261,7 @@ plot.fahb_analysis <- function(x, ...){
 
 plot_post_samples <- function(samples, par_name){
   df <- data.frame(x = samples)
-  ggplot2::ggplot(df, ggplot2::aes(x=x)) +
+  ggplot2::ggplot(df, ggplot2::aes(x=.data$x)) +
   ggplot2::geom_density() +
     ggplot2::xlab(par_name) +
     ggplot2::ylab("Posterior prob.") +

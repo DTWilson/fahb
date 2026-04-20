@@ -40,7 +40,7 @@ plot_gamma_prior <- function(shape, rate, par_name, post = FALSE){
   df <- data.frame(x = x,
                    pr = stats::dgamma(x, shape, rate=rate))
   
-  p <- ggplot2::ggplot(df, ggplot2::aes(x, pr)) + ggplot2::geom_line() +
+  p <- ggplot2::ggplot(df, ggplot2::aes(.data$x, .data$pr)) + ggplot2::geom_line() +
     ggplot2::xlab(par_name) +
     ggplot2::theme_minimal()
   if(post){ 
@@ -61,7 +61,7 @@ plot_normal_prior <- function(mean, sd, par_name){
   df <- data.frame(x = x,
                    pr = stats::dnorm(x, mean, sd))
   
-  p <- ggplot2::ggplot(df, ggplot2::aes(x, pr)) + ggplot2::geom_line() +
+  p <- ggplot2::ggplot(df, ggplot2::aes(.data$x, .data$pr)) + ggplot2::geom_line() +
     ggplot2::xlab(par_name) + ggplot2::ylab("Prior prob.") +
     ggplot2::theme_minimal()
   
@@ -73,7 +73,7 @@ plot_rr_prior_predictive <- function(problem){
                    sig = stats::rgamma(10^5, problem$sd_rr_hp_a, rate = problem$sd_rr_hp_b))
   df$gamma <- exp(stats::rnorm(10^5, df$beta, df$sig))
   
-  p <- ggplot2::ggplot(df, ggplot2::aes(gamma)) + 
+  p <- ggplot2::ggplot(df, ggplot2::aes(.data$gamma)) + 
     ggplot2::stat_density(alpha = 0, colour = "black") +
     ggplot2::xlab("Participant recruitment rate at random site") +
     ggplot2::ylab("Prior pred. prob.") +

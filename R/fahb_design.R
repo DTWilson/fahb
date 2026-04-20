@@ -100,7 +100,7 @@ plot.fahb_design <- function(x, ...){
   
   all_OCs <- rbind(PC_OCs, Bayes_OCs)
   
-  p <- ggplot2::ggplot(all_OCs, ggplot2::aes(FPR, FNR, colour = type)) + ggplot2::geom_step() +
+  p <- ggplot2::ggplot(all_OCs, ggplot2::aes(.data$FPR, .data$FNR, colour = .data$type)) + ggplot2::geom_step() +
     ggplot2::scale_color_discrete(name = "Method") +
     ggplot2::xlab("False Positive Rate") +
     ggplot2::ylab("False Negative Rate") +
