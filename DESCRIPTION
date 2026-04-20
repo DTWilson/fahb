@@ -1,9 +1,13 @@
 Package: fahb
-Title: What the Package Does (One Line, Title Case)
+Title: Design and Analysis of Pilot Trials Assessing Recruitment Feasibility
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Duncan", "Wilson", , "d.t.wilson@leeds.ac.uk", 
+    role = c("aut", "cre", "cph"), comment = c(ORCID = "0000-0001-7949-8718"))
+Description: Find optimal decisions rules for guiding progression decisions 
+    following a pilot trial, assuming a hierarchical recruitment model. Estimate 
+    (probabilisticaly) the time until the main trial recruits to target, given 
+    the recruitment data observed in the pilot.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
