@@ -59,7 +59,7 @@ Let's apply this framework to specifying a particular problem. The GUSTO trial a
 Pre-trial feasibility assessments of recruiting sites led to an estimated total recruitment rate of 13 participants per month from all sites, and an estimated site opening rate of 10.53 sites per year. We constructed prior distributions for $\beta, \sigma$ and $\lambda$ which matched these expectations and allowed a realistic degree of prior uncertainty. We can then use all this information to specify the problem in the form of a `fahb_problem` object:
 
 ```{r}
-problem <- fahb_problem(N = 320, m = 20 , t = 0.167, rel_thr = 1.2, 
+problem <- fahb_problem(N = 320, m = 20 , t_int = 0.167, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
                         sd_rr_hps = c(30, 100))
@@ -150,14 +150,22 @@ analysis <- fahb_analysis(n_pilot, t_pilot, problem)
 We can use `print()` and `plot()` methods to summarise results, although note that the posterior predictive samples and the `brmsfit` model are both held within the analysis object. This is to allow the user to summarise results in other ways if they please.
 
 ```{r}
-print.fahb_analysis(analysis)
+print(analysis)
 
-plots <- plot.fahb_analysis(analysis)
+plots <- plot(analysis)
 (plots[[1]] + plots[[2]]) / (plots[[3]] + plots[[4]])
 ```
 
 ## External pilots
 
-By default, `fahb` assumes an internal pilot. 
+By default `fahb` assumes an internal pilot, but we can use it for external pilots too. For example, suppose we use the same model as in the GUSTO example. Now we assume the external pilot will run from three sites until either 60 participants have been recruited or we reach a time of `t_int = 0.5` of the expected recruitment time of the main trial.
+
+```{r}
+problem <- fahb_problem(n_ext = 60, m_ext = 12, t_int = 0.16)
+
+problem <- forecast(problem)
+
+design <- fahb_design(problem)
+```
 
 ## References

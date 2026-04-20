@@ -1,7 +1,11 @@
 simulate_data <- function(beta_m, beta_s,
                           v_sh, v_r,
                           setup_r_a, setup_r_b,
-                          target_n, m, int_t){
+                          target_n, m, 
+                          internal,
+                          int_t = int_t,
+                          n_ext = NULL, m_ext = NULL){
+
   
   # True per year recruitment rates for each site
   ## Sample beta_0 from prior
@@ -20,7 +24,17 @@ simulate_data <- function(beta_m, beta_s,
   
   rec_time <- rec_rates[nrow(rec_rates), 3]
 
-  df <- site_dist(rec_rates, int_t)
+  if(internal){
+    df <- site_dist(rec_rates, int_t)
+  } else {
+    # If the pilot is external we generate a new set of data using the same 
+    # parameters
+    rec_rates_p <- cond_sim(m, n_ext, m_ext, setup_r, lambdas)
+    int_t <- min(int_t, rec_rates_p[nrow(rec_rates_p), 3])
+    #site_t <- min(int_t, rec_rates_p[nrow(rec_rates_p), 2])
+    
+    df <- site_dist(rec_rates_p, int_t)
+  }
   
   n_p <- sum(df$y)
   m_p <- nrow(df)

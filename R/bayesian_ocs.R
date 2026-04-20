@@ -4,7 +4,12 @@ bayesian_ocs <- function(problem){
   }
   
   df <- problem$sims
-  fit <- mgcv::gam(rec_T ~ ti(n_p) + ti(m_p) + ti(r_p) + ti(m_p, n_p), data = df)
+  unique_m_ps <- length(unique(df$m_p))
+  if(unique_m_ps >= 5){
+    fit <- mgcv::gam(rec_T ~ ti(n_p) + ti(m_p) + ti(r_p) + ti(m_p, n_p), data = df)
+  } else {
+    fit <- mgcv::gam(rec_T ~ ti(n_p) + ti(r_p), data = df)
+  }
   df$pred_T <- mgcv::predict.gam(fit)
   
   rules <- seq(min(df$pred_T), max(df$pred_T), length.out = 1000)

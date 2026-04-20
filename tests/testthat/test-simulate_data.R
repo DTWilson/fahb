@@ -10,6 +10,7 @@ test_that("simulate_data returns a numeric vector of length 4", {
     setup_r_b = 2.85,
     target_n = 50,
     m = 10,
+    internal = TRUE,
     int_t = 1
   )
   
@@ -29,6 +30,7 @@ test_that("simulate_data returns finite, non-negative values", {
     setup_r_b = 2.85,
     target_n = 50,
     m = 10,
+    internal = TRUE,
     int_t = 1
   )
   
@@ -48,6 +50,7 @@ test_that("simulate_data recruitment time is positive", {
     setup_r_b = 2.85,
     target_n = 50,
     m = 10,
+    internal = TRUE,
     int_t = 1
   )[1]
   

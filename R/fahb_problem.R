@@ -1,11 +1,15 @@
-new_fahb_problem <- function(N, m, t, rel_thr,
+new_fahb_problem <- function(N, m, t_int, n_ext, m_ext,
+                             internal,
+                             rel_thr,
                              p_t, exp_T, thr,
                              so_hp_a, so_hp_b,
                              mean_rr_hp_a, mean_rr_hp_b,
                              sd_rr_hp_a, sd_rr_hp_b,
                              sims){
   
-  structure(list(N=N, m=m, t=t, rel_thr=rel_thr,
+  structure(list(N=N, m=m, t_int=t_int, n_ext=n_ext, m_ext=m_ext,
+                 internal=internal,
+                 rel_thr=rel_thr,
                  p_t=p_t, exp_T=exp_T, thr=thr,
                  so_hp_a=so_hp_a, so_hp_b=so_hp_b,
                  mean_rr_hp_a=mean_rr_hp_a, mean_rr_hp_b = mean_rr_hp_b,
@@ -26,8 +30,10 @@ validate_fahb_problem <- function(y){
 #'
 #' @param N target sample size.
 #' @param m number of recruiting sites.
-#' @param t timing of the internal pilot analysis, as a proportion of the 
+#' @param t_int timing of an internal pilot analysis, as a proportion of the 
 #' expected time to recruit.
+#' @param n_ext number of participants to recruit to an external pilot.
+#' @param m_ext number of sites to open in an external pilot.
 #' @param rel_thr threshold which discriminates feasible and infeasible trials,
 #'  as a multiple of the expected time to recruit.
 #' @param so_hps site opening rate hyperparameters (shape and rate for a Gamma prior).
@@ -42,19 +48,39 @@ validate_fahb_problem <- function(y){
 #' @examples 
 #' fahb_problem()
 #' 
-fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
+fahb_problem <- function(N = 320, m = 20 , t_int = 0.167, 
+                         n_ext = NULL, m_ext = NULL,
+                         rel_thr = 1.2,
                          so_hps = c(30, 2.85), 
                          mean_rr_hps = c(2, 0.329), 
                          sd_rr_hps = c(30, 100)){
   # Defaults from our GUSTO example
   
+  if(!is.null(n_ext)){
+    if(!is.null(m_ext)){
+      internal <- FALSE
+      if(n_ext < 1 | m_ext < 1){
+        stop("n_ext and m_ext must be >= 1")
+      }
+    } else {
+      stop("Both n_ext and m_ext must be supplied for the external pilot case")
+    }
+  } else {
+    internal <- TRUE
+    if(!is.null(m_ext)){
+      stop("Both n_ext and m_ext must be supplied for the external pilot case")
+    }
+  }
+  
+  if(t_int < 0 | t_int > 1){
+    stop("t must be in [0,1]")
+  }
+  
   # Check inputs make sense
   if(N < 1 | m < 1){
     stop("N and m must be >= 1")
   }
-  if(t < 0 | t > 1){
-    stop("t must be in [0,1]")
-  }
+
   if(any(c(so_hps, mean_rr_hps, sd_rr_hps) <= 0)){
     stop("All hyperparameters must be > 0")
   }
@@ -63,12 +89,14 @@ fahb_problem <- function(N = 320, m = 20 , t = 0.167, rel_thr = 1.2,
   exp_T <- exp_rec_time(m, N, so_hps, mean_rr_hps)
   
   # Calculate p_t - the calendar time of the internal pilot analysis
-  p_t <- exp_T*t
+  p_t <- exp_T*t_int
   
   # Get the threshold of rec time which denotes feasibility
   thr <- rel_thr*exp_T
   
-  new_fahb_problem(N, m, t, rel_thr,
+  new_fahb_problem(N, m, t_int, 
+                   n_ext, m_ext, internal,
+                   rel_thr,
                    p_t, exp_T, thr,
                    so_hp_a = so_hps[1], so_hp_b = so_hps[2],
                    mean_rr_hp_a = mean_rr_hps[1], mean_rr_hp_b = mean_rr_hps[2],
