@@ -158,6 +158,6 @@ plots <- plot.fahb_analysis(analysis)
 
 ## External pilots
 
-To do - implement extension to the external pilot setting.
+By default, `fahb` assumes an internal pilot. 
 
 ## References

@@ -27,6 +27,11 @@ new_fahb_analysis <- function(PC_stats, Bayes_stats,
 fahb_analysis <- function(n_pilot, t_pilot,
                           problem, 
                           bayes_model = NULL){
+  
+  if(length(n_pilot) != length(t_pilot)){
+    stop("Lengths of n_pilot and t_pilot must match")
+  }
+  
   m <- problem$m
   
   # Get standard PC summaries
@@ -45,7 +50,7 @@ fahb_analysis <- function(n_pilot, t_pilot,
                          c = 1:length(n_pilot))
   
   # Generate posterior samples
-  output <- capture.output(fit <- suppressWarnings(update(bayes_model, 
+  output <- utils::capture.output(fit <- suppressWarnings(brms::update(bayes_model, 
                                                           backend = "cmdstanr",
                                                           recompile = FALSE, 
                                                           newdata = int_data, 
@@ -167,7 +172,7 @@ compile_bayes_model <- function(n_pilot, t_pilot,
   
   stanvars <- brms::stanvar(beta_m, name='beta_m') + 
     brms::stanvar(beta_s, name='beta_s') + 
-    brms::stanvar(v_sh, name='v_sh') + stanvar(v_r, name='v_r')
+    brms::stanvar(v_sh, name='v_sh') + brms::stanvar(v_r, name='v_r')
   
   bprior <- c(brms::prior(normal(beta_m, beta_s), class = "Intercept"),
               brms::prior(gamma(v_sh, v_r), class = "sd"))
@@ -176,7 +181,7 @@ compile_bayes_model <- function(n_pilot, t_pilot,
                      t = t_pilot,
                      c = 1:length(n_pilot))
   
-  bayes_model <- brms::brm(y | rate(t) ~ 1 + (1 | c), data = int_data, family = poisson(),
+  bayes_model <- brms::brm(y | rate(t) ~ 1 + (1 | c), data = int_data, family = stats::poisson(),
                      prior = bprior, 
                      stanvars = stanvars,
                      chains = 0, silent = 2)

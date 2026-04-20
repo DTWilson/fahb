@@ -4,10 +4,13 @@
 \alias{fahb_design}
 \title{Build a \code{fahb} design object}
 \usage{
-fahb_design(problem)
+fahb_design(problem, quietly = TRUE)
 }
 \arguments{
 \item{problem}{an object of class \code{fahb_problem}.}
+
+\item{quietly}{if this argument is set to FASLE then information about which
+steps have been completed will be printed to the console. Defaults to TRUE.}
 }
 \value{
 an object of class \code{fahb_design}.

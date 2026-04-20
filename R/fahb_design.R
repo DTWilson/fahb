@@ -13,6 +13,8 @@ new_fahb_design <- function(problem,
 #' based on a Bayesian analysis of the pilot trial data, or both. 
 #'
 #' @param problem an object of class `fahb_problem`.
+#' @param quietly if this argument is set to FASLE then information about which
+#' steps have been completed will be printed to the console. Defaults to TRUE.
 #'
 #' @returns an object of class `fahb_design`.
 #' @export
@@ -21,7 +23,7 @@ new_fahb_design <- function(problem,
 #' problem <- forecast(fahb_problem())
 #' fahb_design(problem)
 #' 
-fahb_design <- function(problem){
+fahb_design <- function(problem, quietly = TRUE){
   if(is.null(problem$sims)){
     stop("Problem does not contain trial simulations - see fahb::forecast()")
   }

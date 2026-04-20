@@ -4,10 +4,13 @@
 \alias{print.fahb_design}
 \title{Print a fahb design object}
 \usage{
-\method{print}{fahb_design}(x, ...)
+\method{print}{fahb_design}(x, coarse = TRUE, ...)
 }
 \arguments{
 \item{x}{object of class \code{fahb_design} as produced by \code{fahb_design()}.}
+
+\item{coarse}{binary indicator that only a coarse subset of all decision
+rules should be printed. Defaults to TRUE.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
