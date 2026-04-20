@@ -42,20 +42,30 @@ fahb_design <- function(problem){
 #' The default print method for a `fahb_design` object.
 #' 
 #' @param x object of class `fahb_design` as produced by `fahb_design()`.
+#' @param coarse binary indicator that only a coarse subset of all decision 
+#' rules should be printed. Defaults to TRUE.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @return no return value, called for side effects.
 #' 
 #' @export
-print.fahb_design <- function(x, ...){
+print.fahb_design <- function(x, coarse = TRUE, ...){
   cat("Standard progression criteria\n")
   cat("\n")
-  print(x$Prog_Crit_OCs)
+  if(coarse){
+    print(x$Prog_Crit_OCs[x$Prog_Crit_OCs$FPR %in% seq(0,1,0.1),])
+  } else {
+    print(x$Prog_Crit_OCs)
+  }
   cat("\n")
   
   cat("Bayesian approximation\n")
   cat("\n")
-  print(x$Bayes_OCs)
+  if(coarse){
+    print(x$Bayes_OCs[x$Bayes_OCs$FPR %in% seq(0,1,0.1),])
+  } else {
+    print(x$Bayes_OCs)
+  }
   cat("\n")
   cat("FPR - False Positive Rate\n")
   cat("FNR - False Negative Rate\n\n")

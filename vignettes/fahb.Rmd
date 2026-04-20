@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(fahb)
+library(patchwork)
 ```
 
 ## Introduction
@@ -69,7 +70,9 @@ We have tried to use meaningful names for the function arguments, splitting the 
 It is generally helpful to visualise prior densities to check they align with our prior beliefs, and `fahb` will help you do that via the `check_priors()` function. In addition to densities of the three substantive parameters $\lambda, \beta$ and $\sigma$, it will also plot the implied prior distribution of the recruitment rate at a randomly selected site.
 
 ```{r}
-check_priors(problem)
+plots <- check_priors(problem)
+
+(plots[[1]] + plots[[2]]) / (plots[[3]] + plots[[4]])
 ```
 
 ## Operating characteristics to inform design decisions
@@ -82,6 +85,8 @@ An alternative form of decision rule is based on a Bayesian analysis of the pilo
 
 To help us choose these thresholds we can use the `forecast()` function to run the necessary simulations and store them in our `fahb_problem` object, and then create a `fahb_design` object which takes a problem as its argument:
 ```{r}
+set.seed(9278635)
+
 # Run the simulations
 problem <- forecast(problem)
 
@@ -89,6 +94,11 @@ problem <- forecast(problem)
 design <- fahb_design(problem)
 
 plot(design)
+```
+
+This plot shows the best operating characteristics which are possible for both types of decision rules. We can look at the specific OCs attained and the corresponding thresholds of the decision rules by printing the `fahb_design` object:
+
+```{r}
 design
 ```
 
@@ -101,7 +111,7 @@ design$Prog_Crit_OCs[design$Prog_Crit_OCs$FPR == 0.2,]
 design$Bayes_OCs[design$Bayes_OCs == 0.2,]
 ```
 
-That is, the standard progression criteria tell us we should proceed only if we recruit at least 6 participants from at least 3 sites, with a overall rate of at least 6.49. We get very similar OCs if instead we run a Bayesian analysis and proceed only if the expected time to recruit is under 3.29 years. Note that many of the suggested progression criteria have negative components which will always be exceeded and are, therefore, redundant.
+That is, the standard progression criteria tell us we should proceed only if we recruit at least 9 participants from at least 1 site, with a overall rate of at least 4.76. We get very similar OCs if instead we run a Bayesian analysis and proceed only if the expected time to recruit is under 3.15 years. Note that many of the suggested progression criteria have negative components which will always be exceeded and are, therefore, redundant.
 
 If we want to improve the OCs, we need more information in the internal pilot. For example, we could instead wait until time $t = 12/36$:
 
@@ -126,7 +136,7 @@ design$Prog_Crit_OCs[design$Prog_Crit_OCs$FPR == 0.2,]
 
 After we have collected the pilot data, we need to analyse it and make our progression decision. If we have pre-specified standard progression criteria, this is trivial - we just calculate the three summary measures and check if they have all exceeded our chosen thresholds.
 
-If we are making decisions using the Bayesian approach, the analysis is more involved. We need to take our recruitment data and use it to estimate the posterior distribution of the three parameters in our model ($\lambda, \beta$ and $\sigma$). We then need to use these posteriors to estimate the prior predictive distribution of the time until full recruitment, $T$.
+If we are making decisions using the Bayesian approach, the analysis is more involved. We need to take our recruitment data and use it to estimate the posterior distribution of the three parameters in our model ($\lambda, \beta$ and $\sigma$) and of the random effects for all the sites which opened in the pilot. We then need to use these posteriors to estimate the prior predictive distribution of the time until full recruitment, $T$.
 
 Suppose our pilot data are recruitment numbers $4, 8, 0$ and $2$, recruited from sites which had been open for $0.5, 0.4, 0.3$ and $0.2$ years respectively.
 
@@ -137,11 +147,13 @@ t_pilot <- c(0.5, 0.4, 0.3, 0.2)
 analysis <- fahb_analysis(n_pilot, t_pilot, problem)
 ```
 
-We can use `print()` and `plot()` methods to summarise results, although note that the posterior predictive samples and the `brmsfit` model are both held within the analysis object so the user can summarise results in other ways if they please.
+We can use `print()` and `plot()` methods to summarise results, although note that the posterior predictive samples and the `brmsfit` model are both held within the analysis object. This is to allow the user to summarise results in other ways if they please.
 
 ```{r}
 print.fahb_analysis(analysis)
-plot.fahb_analysis(analysis)
+
+plots <- plot.fahb_analysis(analysis)
+(plots[[1]] + plots[[2]]) / (plots[[3]] + plots[[4]])
 ```
 
 ## External pilots
