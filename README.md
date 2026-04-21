@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/DTWilson/fahb//branch/main/graph/badge.svg)](https://app.codecov.io/gh/DTWilson/fahb)
 <!-- badges: end -->
 
 The goal of `fahb` is to help with clinical trial **f**easibility
@@ -37,9 +39,9 @@ devtools::install_github("DTWilson/fahb")
 Suppose we are planning an internal pilot for a trial which aims to
 recruit `N = 320` participants from `m = 20` sites, and that we expect
 recruitment to complete in three years. The pilot analysis will happen
-at 12 months (so at time `t = 1/3` relative to the expected recruitment
-time), and we would class the trial as infeasible if recruitment took
-longer than `rel_thr = 1.2` times the expected recruitment time.
+at `t = 0.5` years, and we would class the trial as infeasible if
+recruitment took longer than `rel_thr = 1.2` times the expected
+recruitment time.
 
 The variables `N, m, t` and `rel_thr` define the design variables. For
 the model parameters, for the purpose of illustration we use the package
@@ -52,7 +54,7 @@ the operating characteristics they lead to:
 ``` r
 library(fahb)
 
-problem <- fahb_problem(N = 320, m = 20, t_int = 0.2, rel_thr = 1.2)
+problem <- fahb_problem(N = 320, m = 20, t = 0.5, rel_thr = 1.2)
 
 # Run the simulations
 problem <- forecast(problem)
@@ -65,29 +67,29 @@ design <- fahb_design(problem)
 print(design)
 #> Standard progression criteria
 #> 
-#>     FPR         FNR        n_p         m_p        r_p
-#> 1   0.0 0.826086957 26.4699097  4.62511758  8.7729347
-#> 11  0.1 0.411781206 14.0982270  1.27756467  5.9841116
-#> 21  0.2 0.283730715  8.7421711  0.44920095  6.3859320
-#> 41  0.4 0.145301543  2.6732340 -0.44589371  5.6020928
-#> 51  0.5 0.104908836  0.2255489  0.52603007  5.1955342
-#> 71  0.7 0.039130435 -0.8229755 -0.14434948  3.9872926
-#> 81  0.8 0.021458626 -0.7296959 -0.49522531  3.3632321
-#> 91  0.9 0.009396914 -0.5483921  1.06629663  2.4837796
-#> 101 1.0 0.000000000 -0.5295355  0.04794332 -0.6905117
+#>     FPR        FNR        n_p        m_p         r_p
+#> 1   0.0 0.91467814 16.4641589 -0.5926573 13.24656305
+#> 11  0.1 0.44908435 10.2938437 -0.6705851  6.09395120
+#> 21  0.2 0.33240844  6.9955302  0.3987109  6.20278434
+#> 41  0.4 0.18410100 -0.3374165  0.9249259  5.62947944
+#> 51  0.5 0.13831853  1.6399851  0.6354703  5.01023827
+#> 71  0.7 0.06076582  0.6879755  0.4335003  3.71864419
+#> 81  0.8 0.03634850  1.1947214 -0.7722553  2.85460567
+#> 91  0.9 0.01997780 -0.3148560  0.9080757  1.69344163
+#> 101 1.0 0.00000000 -0.6494104 -0.8812036 -0.05611385
 #> 
 #> Bayesian approximation
 #> 
-#>     FPR         FNR      T_p
-#> 1   0.0 1.000000000 1.237585
-#> 11  0.1 0.375175316 3.181149
-#> 21  0.2 0.263253857 3.357522
-#> 41  0.4 0.133660589 3.641103
-#> 51  0.5 0.091023843 3.755226
-#> 71  0.7 0.039971950 3.997307
-#> 81  0.8 0.020476858 4.128723
-#> 91  0.9 0.009256662 4.284346
-#> 101 1.0 0.000000000 4.692425
+#>     FPR        FNR      T_p
+#> 1   0.0 1.00000000 1.334127
+#> 11  0.1 0.44048280 3.115271
+#> 21  0.2 0.32311321 3.297020
+#> 41  0.4 0.17092120 3.567992
+#> 51  0.5 0.13249168 3.677042
+#> 71  0.7 0.06298557 3.891836
+#> 81  0.8 0.03648724 4.010800
+#> 91  0.9 0.02261376 4.133067
+#> 101 1.0 0.00000000 4.509784
 #> 
 #> FPR - False Positive Rate
 #> FNR - False Negative Rate

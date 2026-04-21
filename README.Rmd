@@ -39,14 +39,14 @@ devtools::install_github("DTWilson/fahb")
 
 ## Example
 
-Suppose we are planning an internal pilot for a trial which aims to recruit `N = 320` participants from `m = 20` sites, and that we expect recruitment to complete in three years. The pilot analysis will happen at 12 months (so at time `t = 1/3` relative to the expected recruitment time), and we would class the trial as infeasible if recruitment took longer than `rel_thr = 1.2` times the expected recruitment time.
+Suppose we are planning an internal pilot for a trial which aims to recruit `N = 320` participants from `m = 20` sites, and that we expect recruitment to complete in three years. The pilot analysis will happen at `t = 0.5` years, and we would class the trial as infeasible if recruitment took longer than `rel_thr = 1.2` times the expected recruitment time.
 
 The variables `N, m, t` and `rel_thr` define the design variables. For the model parameters, for the purpose of illustration we use the package defaults (but see the vignette and the associated paper for more discussion of these). To use `fahb` we first encode all design variables and model parameters in a `fahb_problem` object, then run some simulations via `forecast()` before finding possible decision rules and the operating characteristics they lead to:
 
 ```{r}
 library(fahb)
 
-problem <- fahb_problem(N = 320, m = 20, t_int = 0.2, rel_thr = 1.2)
+problem <- fahb_problem(N = 320, m = 20, t = 0.5, rel_thr = 1.2)
 
 # Run the simulations
 problem <- forecast(problem)
