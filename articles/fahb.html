@@ -96,8 +96,9 @@ according to a Poisson process, with rate
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>.</p>
 <p>The three parameters in the model
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>,</mo><mi>β</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">(\lambda, \beta,</annotation></semantics></math>
-and $ )$ are unknown, and so we place prior distributions on each.
-Formally,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sigma)</annotation></semantics></math>
+are unknown, and so we place prior distributions on each. Formally,
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><mi>λ</mi></mtd><mtd columnalign="left" style="text-align: left"><mo>∼</mo><mi>G</mi><mi>a</mi><mi>m</mi><mi>m</mi><mi>a</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>δ</mi><mo>,</mo><mi>ϵ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><mi>β</mi></mtd><mtd columnalign="left" style="text-align: left"><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><msup><mi>ν</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><mi>σ</mi></mtd><mtd columnalign="left" style="text-align: left"><mo>∼</mo><mi>G</mi><mi>a</mi><mi>m</mi><mi>m</mi><mi>a</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ρ</mi><mo>,</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mtd></mtr></mtable><annotation encoding="application/x-tex">
 \begin{align}
     \lambda &amp; \sim Gamma(\delta, \epsilon) ,\\
@@ -116,19 +117,17 @@ hyperparameters.</p>
 <div class="section level3">
 <h3 id="the-trial">The trial<a class="anchor" aria-label="anchor" href="#the-trial"></a>
 </h3>
-<p>Our focus for now is on internal, not external pilots. The trial
-design is therefore specified by the total number to recruit in the full
-study,
+<p>For a trial with an internal pilot, the trial design is specified by
+the total number to recruit in the full study,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>,
 the number of sites,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>,
 and the timing of the interim analysis,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-(which we define as the proportion of the expected time to fully
-recruit, in years). A final piece of necessary information is the
-threshold we will use to denote whether a trial is feasible or not. We
-specify this as a multiple of the expected time to fully recruit.</p>
-<p>Thus, the trial is fully specified by these four variables.</p>
+(in years). A final piece of necessary information is the threshold we
+will use to denote whether a trial is feasible or not. We specify this
+as a multiple of the expected time to fully recruit. The trial is
+therefore fully specified by these four variables.</p>
 </div>
 </div>
 <div class="section level2">
@@ -140,11 +139,11 @@ GUSTO trial aimed to recruit a total of
 participants from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">m = 20</annotation></semantics></math>
 sites over a period of 3 years, and included an internal pilot at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>6</mn><mi>/</mi><mn>36</mn></mrow><annotation encoding="application/x-tex">t = 6/36</annotation></semantics></math>
-years into recruitment. We suppose that if the trial recruits within 1.2
-times the expected timeframe, we should consider it <em>feasible</em>;
-otherwise, we consider it <em>infeasible</em> and would ideally like to
-stop early.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">t = 0.5</annotation></semantics></math>
+years into recruitment. We suppose that if the trial recruits within
+<code>rel_thr = 1.2</code> times the expected timeframe, we should
+consider it <em>feasible</em>; otherwise, we consider it
+<em>infeasible</em> and would ideally like to stop early.</p>
 <p>Pre-trial feasibility assessments of recruiting sites led to an
 estimated total recruitment rate of 13 participants per month from all
 sites, and an estimated site opening rate of 10.53 sites per year. We
@@ -156,19 +155,19 @@ which matched these expectations and allowed a realistic degree of prior
 uncertainty. We can then use all this information to specify the problem
 in the form of a <code>fahb_problem</code> object:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span>, t_int <span class="op">=</span> <span class="fl">0.167</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
+<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span>, t <span class="op">=</span> <span class="fl">0.5</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
 <span>                        so_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">2.85</span><span class="op">)</span>, </span>
 <span>                        mean_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0.329</span><span class="op">)</span>, </span>
 <span>                        sd_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>We have tried to use meaningful names for the function arguments,
-splitting the hyperparameters into 3 2-element vectors.
-<code>so_hps</code> are for the site opening rate
+splitting the hyperparameters into three 2-element vectors:
+<code>so_hps</code> for the site opening rate
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
 (i.e. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>δ</mi><annotation encoding="application/x-tex">\delta</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>);
-<code>mean_rr_hps</code> are for the central parameter of the
-recruitment rate distribution
+<code>mean_rr_hps</code> for the central parameter of the recruitment
+rate distribution
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
 (i.e. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>
 and
@@ -202,13 +201,12 @@ thresholds guide the progression decision, suggesting we keep going only
 of all three are exceeded.</p>
 <p>These thresholds can be hard to choose, but <code>fahb</code> can
 help us by searching for thresholds which produce good operating
-characteristics (OCs). We have proposed that some helpful OCs are the
-false positive rate (FPR) and the false negative rate (FNR); the
-probability of progressing (stopping) given that the trial is truly
-infeasible (feasible). We estimate these OCs by simulating
-<code>n_sims</code> trials and comparing their true feasibility (as
-dictated by <code>rel_thr</code>) and the progression decision made by
-the decision rule.</p>
+characteristics. We propose to use the false positive rate (FPR) and the
+false negative rate (FNR); the probability of progressing (stopping)
+given that the trial is truly infeasible (feasible). We estimate these
+by simulating <code>n_sims</code> trials and comparing their true
+feasibility (as dictated by <code>rel_thr</code>) and the progression
+decision made by the decision rule.</p>
 <p>An alternative form of decision rule is based on a Bayesian analysis
 of the pilot data and the resulting expectation of the posterior
 predictive distribution of the time to recruit. This rule is simpler in
@@ -218,7 +216,7 @@ continue.</p>
 <p>To help us choose these thresholds we can use the
 <code><a href="../reference/forecast.html">forecast()</a></code> function to run the necessary simulations and
 store them in our <code>fahb_problem</code> object, and then create a
-<code>fahb_design</code> object which takes a problem as its
+<code>fahb_design</code> object which takes this problem as its
 argument:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">9278635</span><span class="op">)</span></span>
@@ -253,10 +251,11 @@ under 3.15 years. Note that many of the suggested progression criteria
 have negative components which will always be exceeded and are,
 therefore, redundant.</p>
 <p>If we want to improve the OCs, we need more information in the
-internal pilot. For example, we could instead wait until time
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>12</mn><mi>/</mi><mn>36</mn></mrow><annotation encoding="application/x-tex">t = 12/36</annotation></semantics></math>:</p>
+internal pilot. For example, we could instead wait until
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t = 1</annotation></semantics></math>
+year into the recruitment period:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span> , t_int <span class="op">=</span> <span class="fl">0.336</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
+<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span> , t <span class="op">=</span> <span class="fl">1</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
 <span>                        so_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">2.85</span><span class="op">)</span>, </span>
 <span>                        mean_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0.329</span><span class="op">)</span>, </span>
 <span>                        sd_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>

@@ -31,7 +31,7 @@ rates follow a log-normal distribution:
 $$\ln\gamma_{j} \sim N\left( \beta,\sigma^{2} \right).$$ We also assume
 that sites open according to a Poisson process, with rate $\lambda$.
 
-The three parameters in the model $(\lambda,\beta,$ and \$ )\$ are
+The three parameters in the model $(\lambda,\beta,$ and $\sigma)$ are
 unknown, and so we place prior distributions on each. Formally,
 $$\begin{aligned}
 \lambda & {\sim Gamma(\delta,\epsilon),} \\
@@ -44,24 +44,22 @@ model is therefore fully specified by these six hyperparameters.
 
 ### The trial
 
-Our focus for now is on internal, not external pilots. The trial design
-is therefore specified by the total number to recruit in the full study,
-$N$, the number of sites, $m$, and the timing of the interim analysis,
-$t$ (which we define as the proportion of the expected time to fully
-recruit, in years). A final piece of necessary information is the
-threshold we will use to denote whether a trial is feasible or not. We
-specify this as a multiple of the expected time to fully recruit.
-
-Thus, the trial is fully specified by these four variables.
+For a trial with an internal pilot, the trial design is specified by the
+total number to recruit in the full study, $N$, the number of sites,
+$m$, and the timing of the interim analysis, $t$ (in years). A final
+piece of necessary information is the threshold we will use to denote
+whether a trial is feasible or not. We specify this as a multiple of the
+expected time to fully recruit. The trial is therefore fully specified
+by these four variables.
 
 ## Example - GUSTO
 
 Let’s apply this framework to specifying a particular problem. The GUSTO
 trial aimed to recruit a total of $N = 320$ participants from $m = 20$
 sites over a period of 3 years, and included an internal pilot at
-$t = 6/36$ years into recruitment. We suppose that if the trial recruits
-within 1.2 times the expected timeframe, we should consider it
-*feasible*; otherwise, we consider it *infeasible* and would ideally
+$t = 0.5$ years into recruitment. We suppose that if the trial recruits
+within `rel_thr = 1.2` times the expected timeframe, we should consider
+it *feasible*; otherwise, we consider it *infeasible* and would ideally
 like to stop early.
 
 Pre-trial feasibility assessments of recruiting sites led to an
@@ -73,16 +71,16 @@ uncertainty. We can then use all this information to specify the problem
 in the form of a `fahb_problem` object:
 
 ``` r
-problem <- fahb_problem(N = 320, m = 20, t_int = 0.167, rel_thr = 1.2, 
+problem <- fahb_problem(N = 320, m = 20, t = 0.5, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
                         sd_rr_hps = c(30, 100))
 ```
 
 We have tried to use meaningful names for the function arguments,
-splitting the hyperparameters into 3 2-element vectors. `so_hps` are for
+splitting the hyperparameters into three 2-element vectors: `so_hps` for
 the site opening rate $\lambda$ (i.e. $\delta$ and $\epsilon$);
-`mean_rr_hps` are for the central parameter of the recruitment rate
+`mean_rr_hps` for the central parameter of the recruitment rate
 distribution $\beta$ (i.e. $\mu$ and $\nu$); and `sd_rr_hps` for the
 corresponding dispersion parameter $\sigma$ (i.e. $\rho$ and $\pi$).
 
@@ -108,13 +106,12 @@ thresholds guide the progression decision, suggesting we keep going only
 of all three are exceeded.
 
 These thresholds can be hard to choose, but `fahb` can help us by
-searching for thresholds which produce good operating characteristics
-(OCs). We have proposed that some helpful OCs are the false positive
-rate (FPR) and the false negative rate (FNR); the probability of
-progressing (stopping) given that the trial is truly infeasible
-(feasible). We estimate these OCs by simulating `n_sims` trials and
-comparing their true feasibility (as dictated by `rel_thr`) and the
-progression decision made by the decision rule.
+searching for thresholds which produce good operating characteristics.
+We propose to use the false positive rate (FPR) and the false negative
+rate (FNR); the probability of progressing (stopping) given that the
+trial is truly infeasible (feasible). We estimate these by simulating
+`n_sims` trials and comparing their true feasibility (as dictated by
+`rel_thr`) and the progression decision made by the decision rule.
 
 An alternative form of decision rule is based on a Bayesian analysis of
 the pilot data and the resulting expectation of the posterior predictive
@@ -126,7 +123,7 @@ To help us choose these thresholds we can use the
 [`forecast()`](https://dtwilson.github.io/fahb/reference/forecast.md)
 function to run the necessary simulations and store them in our
 `fahb_problem` object, and then create a `fahb_design` object which
-takes a problem as its argument:
+takes this problem as its argument:
 
 ``` r
 set.seed(9278635)
@@ -169,10 +166,11 @@ have negative components which will always be exceeded and are,
 therefore, redundant.
 
 If we want to improve the OCs, we need more information in the internal
-pilot. For example, we could instead wait until time $t = 12/36$:
+pilot. For example, we could instead wait until $t = 1$ year into the
+recruitment period:
 
 ``` r
-problem <- fahb_problem(N = 320, m = 20 , t_int = 0.336, rel_thr = 1.2, 
+problem <- fahb_problem(N = 320, m = 20 , t = 1, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
                         sd_rr_hps = c(30, 100))
