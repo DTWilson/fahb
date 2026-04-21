@@ -28,5 +28,4 @@ jobs:
           extra-packages: any::covr
 
       - name: Run coverage
-        run: |
-          covr::codecov()
+        run: Rscript -e 'covr::codecov()'
