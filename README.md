@@ -1,19 +1,20 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# fahb
+# fahb <a href="https://dtwilson.github.io/fahb/"><img src="man/figures/logo.png" align="right" height="139" alt="tout website" /></a>
 
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of `fahb` is to help with feasibility assessment via
-hierarchical Bayesian recruitment models, fitted to (internal or
-external) pilot date. It can be used at the design stage to optimise the
-pilot and any pre-specified decision rules to guide progression, and at
-the analysis stage to produce a probabilistic prediction of the time
-until the main trial recruits to target.
+The goal of `fahb` is to help with clinical trial **f**easibility
+**a**ssessment via **h**ierarchical **B**ayesian recruitment models,
+fitted to (internal or external) pilot date. It can be used at the
+design stage to optimise the pilot and any pre-specified decision rules
+to guide progression, and at the analysis stage to produce a
+probabilistic prediction of the time until the main trial recruits to
+target.
 
 ## Installation
 
@@ -64,29 +65,29 @@ design <- fahb_design(problem)
 print(design)
 #> Standard progression criteria
 #> 
-#>     FPR         FNR        n_p        m_p        r_p
-#> 1   0.0 0.796003912 25.4242082  1.3232325  8.1958645
-#> 11  0.1 0.393600671 12.9467906 -0.9914697  6.3969204
-#> 21  0.2 0.271482465  9.4408576  1.4705756  6.0445189
-#> 41  0.4 0.137487774  2.7714409 -0.7881610  5.5044016
-#> 51  0.5 0.098504960 -0.1603635  0.3890277  5.0824694
-#> 71  0.7 0.040240324  0.5494002  0.5706203  3.9297857
-#> 81  0.8 0.023333799 -0.3250727 -0.4445800  3.3495451
-#> 91  0.9 0.009501188 -0.4354369  0.9006933  2.2724682
-#> 101 1.0 0.000000000 -0.6782580 -0.3317336 -0.7786454
+#>     FPR        FNR        n_p         m_p        r_p
+#> 1   0.0 0.83017038 26.7777371 -0.65039830  8.6424435
+#> 11  0.1 0.41889458 13.8856475  0.25502501  6.2398679
+#> 21  0.2 0.29837928 10.3523959  1.43623741  6.0886589
+#> 41  0.4 0.14766588  5.9815946 -0.01756354  5.3012379
+#> 51  0.5 0.10098352  4.8184179 -0.75504522  4.8204817
+#> 71  0.7 0.04571270  0.5627688  0.12876779  4.0811437
+#> 81  0.8 0.02160964  0.4419184 -0.98685940  3.3227502
+#> 91  0.9 0.01122039 -0.2124722  0.68639316  2.5268754
+#> 101 1.0 0.00000000 -0.3303372 -0.70578889 -0.6399857
 #> 
 #> Bayesian approximation
 #> 
-#>     FPR         FNR      T_p
-#> 1   0.0 1.000000000 1.170344
-#> 11  0.1 0.355595920 3.202008
-#> 21  0.2 0.256112896 3.371313
-#> 41  0.4 0.125052396 3.674652
-#> 51  0.5 0.086209306 3.798104
-#> 71  0.7 0.037306134 4.023844
-#> 81  0.8 0.024311863 4.140242
-#> 91  0.9 0.009501188 4.302493
-#> 101 1.0 0.000000000 4.676375
+#>     FPR        FNR      T_p
+#> 1   0.0 1.00000000 1.248661
+#> 11  0.1 0.39673085 3.149475
+#> 21  0.2 0.27483031 3.329869
+#> 41  0.4 0.13699958 3.607140
+#> 51  0.5 0.09779748 3.730743
+#> 71  0.7 0.04155700 3.967928
+#> 81  0.8 0.02645796 4.088190
+#> 91  0.9 0.01011220 4.251881
+#> 101 1.0 0.00000000 4.565899
 #> 
 #> FPR - False Positive Rate
 #> FNR - False Negative Rate

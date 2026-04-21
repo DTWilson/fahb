@@ -11,7 +11,6 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
 )
 ```
 
@@ -44,13 +43,13 @@ $$
     \sigma & \sim Gamma(\rho, \pi),
 \end{align}
 $$
-where $\delta, \epsilon, \mu, \nu, \rho$ and $\pi$ are known hyperparameters. We assume that the three parameters are independent, so that the joint prior is the product of the three component priors. The **model** is therefore fully specified by these six hyperparameters.
+where $\delta, \epsilon, \mu, \nu, \rho$ and $\pi$ are known hyperparameters. We assume that the three parameters are independent, so that the joint prior is the product of the three component priors. The model is therefore fully specified by these six hyperparameters.
 
 ### The trial
 
 Our focus for now is on internal, not external pilots. The trial design is therefore specified by the total number to recruit in the full study, $N$, the number of sites, $m$, and the timing of the interim analysis, $t$ (which we define as the proportion of the expected time to fully recruit, in years). A final piece of necessary information is the threshold we will use to denote whether a trial is feasible or not. We specify this as a multiple of the expected time to fully recruit.
 
-Thus, the **trial** is fully specified by these four variables.
+Thus, the trial is fully specified by these four variables.
 
 ## Example - GUSTO
 
