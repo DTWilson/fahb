@@ -9,7 +9,7 @@ of class `fahb_problem`.
 fahb_problem(
   N = 320,
   m = 20,
-  t_int = 0.167,
+  t = 0.5,
   n_ext = NULL,
   m_ext = NULL,
   rel_thr = 1.2,
@@ -29,10 +29,9 @@ fahb_problem(
 
   number of recruiting sites.
 
-- t_int:
+- t:
 
-  timing of an internal pilot analysis, as a proportion of the expected
-  time to recruit.
+  timing of the pilot analysis in years.
 
 - n_ext:
 

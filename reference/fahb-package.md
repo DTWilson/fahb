@@ -3,6 +3,12 @@
 Tools for simulation, design, and analysis of internal pilot trials
 using frequentist and Bayesian operating characteristics.
 
+## See also
+
+Useful links:
+
+- <https://dtwilson.github.io/fahb/>
+
 ## Author
 
 **Maintainer**: Duncan Wilson <d.t.wilson@leeds.ac.uk>
