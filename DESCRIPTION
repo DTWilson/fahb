@@ -26,3 +26,4 @@ Imports:
     posterior,
     rlang
 VignetteBuilder: knitr
+URL: https://dtwilson.github.io/fahb/
