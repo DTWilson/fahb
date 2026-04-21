@@ -1,16 +1,16 @@
-new_fahb_problem <- function(N, m, t_int, n_ext, m_ext,
+new_fahb_problem <- function(N, m, t, n_ext, m_ext,
                              internal,
                              rel_thr,
-                             p_t, exp_T, thr,
+                             exp_T, thr,
                              so_hp_a, so_hp_b,
                              mean_rr_hp_a, mean_rr_hp_b,
                              sd_rr_hp_a, sd_rr_hp_b,
                              sims){
   
-  structure(list(N=N, m=m, t_int=t_int, n_ext=n_ext, m_ext=m_ext,
+  structure(list(N=N, m=m, t=t, n_ext=n_ext, m_ext=m_ext,
                  internal=internal,
                  rel_thr=rel_thr,
-                 p_t=p_t, exp_T=exp_T, thr=thr,
+                 exp_T=exp_T, thr=thr,
                  so_hp_a=so_hp_a, so_hp_b=so_hp_b,
                  mean_rr_hp_a=mean_rr_hp_a, mean_rr_hp_b = mean_rr_hp_b,
                  sd_rr_hp_a=sd_rr_hp_a, sd_rr_hp_b=sd_rr_hp_b,
@@ -30,8 +30,7 @@ validate_fahb_problem <- function(y){
 #'
 #' @param N target sample size.
 #' @param m number of recruiting sites.
-#' @param t_int timing of an internal pilot analysis, as a proportion of the 
-#' expected time to recruit.
+#' @param t timing of the pilot analysis in years.
 #' @param n_ext number of participants to recruit to an external pilot.
 #' @param m_ext number of sites to open in an external pilot.
 #' @param rel_thr threshold which discriminates feasible and infeasible trials,
@@ -48,7 +47,7 @@ validate_fahb_problem <- function(y){
 #' @examples 
 #' fahb_problem()
 #' 
-fahb_problem <- function(N = 320, m = 20 , t_int = 0.167, 
+fahb_problem <- function(N = 320, m = 20 , t = 0.5, 
                          n_ext = NULL, m_ext = NULL,
                          rel_thr = 1.2,
                          so_hps = c(30, 2.85), 
@@ -72,7 +71,7 @@ fahb_problem <- function(N = 320, m = 20 , t_int = 0.167,
     }
   }
   
-  if(t_int < 0 | t_int > 1){
+  if(t < 0 | t > 1){
     stop("t must be in [0,1]")
   }
   
@@ -88,16 +87,13 @@ fahb_problem <- function(N = 320, m = 20 , t_int = 0.167,
   # Calculate exp_T - the expected time for trial to recruit
   exp_T <- exp_rec_time(m, N, so_hps, mean_rr_hps)
   
-  # Calculate p_t - the calendar time of the internal pilot analysis
-  p_t <- exp_T*t_int
-  
   # Get the threshold of rec time which denotes feasibility
   thr <- rel_thr*exp_T
   
-  new_fahb_problem(N, m, t_int, 
+  new_fahb_problem(N, m, t, 
                    n_ext, m_ext, internal,
                    rel_thr,
-                   p_t, exp_T, thr,
+                   exp_T, thr,
                    so_hp_a = so_hps[1], so_hp_b = so_hps[2],
                    mean_rr_hp_a = mean_rr_hps[1], mean_rr_hp_b = mean_rr_hps[2],
                    sd_rr_hp_a = sd_rr_hps[1], sd_rr_hp_b = sd_rr_hps[2],

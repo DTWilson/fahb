@@ -3,10 +3,11 @@ simulate_data <- function(beta_m, beta_s,
                           setup_r_a, setup_r_b,
                           target_n, m, 
                           internal,
-                          int_t = int_t,
+                          t = t,
                           n_ext = NULL, m_ext = NULL){
 
   
+  int_t <- t
   # True per year recruitment rates for each site
   ## Sample beta_0 from prior
   beta_0 <- stats::rnorm(1, mean = beta_m, sd = beta_s)

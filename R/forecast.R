@@ -23,7 +23,7 @@ forecast <- function(problem, n_sims = 10^4, overwrite = FALSE){
                                   v_sh=problem$sd_rr_hp_a, v_r=problem$sd_rr_hp_b,
                                   setup_r_a=problem$so_hp_a, setup_r_b=problem$so_hp_b,
                                   target_n=problem$N, m=problem$m, 
-                                  internal=problem$internal, int_t=problem$p_t,
+                                  internal=problem$internal, t=problem$t,
                                   n_ext=problem$n_ext, m_ext=problem$m_ext)))
   r <- as.data.frame(r)
   names(r) <- c("rec_T", "n_p", "m_p", "r_p")

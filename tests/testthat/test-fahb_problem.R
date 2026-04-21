@@ -1,8 +1,3 @@
-test_that("default interim analysis time is correct", {
-  f <- fahb_problem()
-  expect_equal(round(f$p_t,6), 0.501215)
-})
-
 test_that("expected recruitment time increases with N", {
   t1 <- fahb_problem(N = 100)$exp_T
   t2 <- fahb_problem(N = 200)$exp_T
@@ -22,8 +17,8 @@ test_that("fahb_problem contains required fields", {
   expect_named(
     prob,
     c(
-      "N", "m", "t_int", "n_ext", "m_ext", "internal", "rel_thr",
-      "p_t", "exp_T", "thr",
+      "N", "m", "t", "n_ext", "m_ext", "internal", "rel_thr",
+      "exp_T", "thr",
       "so_hp_a", "so_hp_b",
       "mean_rr_hp_a", "mean_rr_hp_b",
       "sd_rr_hp_a", "sd_rr_hp_b",
@@ -36,7 +31,6 @@ test_that("defaults are internally consistent", {
   prob <- fahb_problem()
   
   # Derived quantities
-  expect_equal(prob$p_t, prob$exp_T * prob$t_int)
   expect_equal(prob$thr, prob$rel_thr * prob$exp_T)
   
   # Sims should be NULL on construction
@@ -88,7 +82,7 @@ test_that("changing inputs propagates correctly into the object", {
   prob <- fahb_problem(
     N = 100,
     m = 10,
-    t_int = 0.25,
+    t = 0.25,
     rel_thr = 1.5,
     so_hps = c(5, 2),
     mean_rr_hps = c(1, 0.5),
@@ -97,7 +91,7 @@ test_that("changing inputs propagates correctly into the object", {
   
   expect_equal(prob$N, 100)
   expect_equal(prob$m, 10)
-  expect_equal(prob$t_int, 0.25)
+  expect_equal(prob$t, 0.25)
   expect_equal(prob$rel_thr, 1.5)
   
   expect_equal(prob$so_hp_a, 5)

@@ -43,7 +43,7 @@ fahb_analysis <- function(n_pilot, t_pilot,
                           bayes_model = NULL){
   
   if(is.null(site_t)){
-    site_t <- problem$p_t
+    site_t <- problem$t
     if(!problem$internal){
       stop("External pilots require site_t to be specified")
     }
@@ -117,7 +117,7 @@ fahb_analysis <- function(n_pilot, t_pilot,
       site_matrix <- cbind(us, setup_times)
       
       rec_times <- apply(site_matrix, 1, post_pred_rec_time, 
-                         m=m, target_n=(problem$N - n_p)) + problem$p_t
+                         m=m, target_n=(problem$N - n_p)) + problem$t
     } else {
       # For external, we want setup times for all m sites
       setup_times <- t(sapply(setup_rates, function(x) cumsum(stats::rexp(m, x))))
@@ -142,7 +142,7 @@ fahb_analysis <- function(n_pilot, t_pilot,
       site_matrix <- cbind(us, setup_times)
       
       rec_times <- apply(site_matrix, 1, post_pred_rec_time, 
-                         m=m, target_n=(problem$N - n_p)) + problem$p_t
+                         m=m, target_n=(problem$N - n_p)) + problem$t
     } else {
       # For external, we want setup times for all m sites
       setup_times <- t(sapply(setup_rates, function(x) cumsum(stats::rexp(m, x))))
@@ -209,7 +209,7 @@ compile_bayes_model <- function(n_pilot, t_pilot,
   beta_m <- problem$mean_rr_hp_a; beta_s <- problem$mean_rr_hp_b
   v_sh <- problem$sd_rr_hp_a; v_r <- problem$sd_rr_hp_b
   setup_r_a <- problem$so_hp_a; setup_r_b <- problem$so_hp_b
-  target_n <- problem$N; m <- problem$m; int_t <- problem$p_t
+  target_n <- problem$N; m <- problem$m; int_t <- problem$t
   
   stanvars <- brms::stanvar(beta_m, name='beta_m') + 
     brms::stanvar(beta_s, name='beta_s') + 

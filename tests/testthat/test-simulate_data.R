@@ -11,7 +11,7 @@ test_that("simulate_data returns a numeric vector of length 4", {
     target_n = 50,
     m = 10,
     internal = TRUE,
-    int_t = 1
+    t = 1
   )
   
   expect_type(out, "double")
@@ -31,7 +31,7 @@ test_that("simulate_data returns finite, non-negative values", {
     target_n = 50,
     m = 10,
     internal = TRUE,
-    int_t = 1
+    t = 1
   )
   
   expect_true(all(is.finite(out)))
@@ -51,7 +51,7 @@ test_that("simulate_data recruitment time is positive", {
     target_n = 50,
     m = 10,
     internal = TRUE,
-    int_t = 1
+    t = 1
   )[1]
   
   expect_gt(rec_time, 0)
