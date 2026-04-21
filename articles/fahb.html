@@ -110,8 +110,8 @@ and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>
 are known hyperparameters. We assume that the three parameters are
 independent, so that the joint prior is the product of the three
-component priors. The <strong>model</strong> is therefore fully
-specified by these six hyperparameters.</p>
+component priors. The model is therefore fully specified by these six
+hyperparameters.</p>
 </div>
 <div class="section level3">
 <h3 id="the-trial">The trial<a class="anchor" aria-label="anchor" href="#the-trial"></a>
@@ -128,8 +128,7 @@ and the timing of the interim analysis,
 recruit, in years). A final piece of necessary information is the
 threshold we will use to denote whether a trial is feasible or not. We
 specify this as a multiple of the expected time to fully recruit.</p>
-<p>Thus, the <strong>trial</strong> is fully specified by these four
-variables.</p>
+<p>Thus, the trial is fully specified by these four variables.</p>
 </div>
 </div>
 <div class="section level2">
@@ -157,7 +156,7 @@ which matched these expectations and allowed a realistic degree of prior
 uncertainty. We can then use all this information to specify the problem
 in the form of a <code>fahb_problem</code> object:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span> , t_int <span class="op">=</span> <span class="fl">0.167</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
+<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span>, t_int <span class="op">=</span> <span class="fl">0.167</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
 <span>                        so_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">2.85</span><span class="op">)</span>, </span>
 <span>                        mean_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0.329</span><span class="op">)</span>, </span>
 <span>                        sd_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -257,7 +256,7 @@ therefore, redundant.</p>
 internal pilot. For example, we could instead wait until time
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>12</mn><mi>/</mi><mn>36</mn></mrow><annotation encoding="application/x-tex">t = 12/36</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span> , t <span class="op">=</span> <span class="fl">0.336</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
+<code class="sourceCode R"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span> , t_int <span class="op">=</span> <span class="fl">0.336</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span>, </span>
 <span>                        so_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">2.85</span><span class="op">)</span>, </span>
 <span>                        mean_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0.329</span><span class="op">)</span>, </span>
 <span>                        sd_rr_hps <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>

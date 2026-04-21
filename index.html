@@ -48,12 +48,13 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="fahb">fahb<a class="anchor" aria-label="anchor" href="#fahb"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="fahb-">fahb 
+<a class="anchor" aria-label="anchor" href="#fahb-"></a>
 </h1>
 </div>
 <!-- badges: start -->
 
-<p>The goal of <code>fahb</code> is to help with feasibility assessment via hierarchical Bayesian recruitment models, fitted to (internal or external) pilot date. It can be used at the design stage to optimise the pilot and any pre-specified decision rules to guide progression, and at the analysis stage to produce a probabilistic prediction of the time until the main trial recruits to target.</p>
+<p>The goal of <code>fahb</code> is to help with clinical trial <strong>f</strong>easibility <strong>a</strong>ssessment via <strong>h</strong>ierarchical <strong>B</strong>ayesian recruitment models, fitted to (internal or external) pilot date. It can be used at the design stage to optimise the pilot and any pre-specified decision rules to guide progression, and at the analysis stage to produce a probabilistic prediction of the time until the main trial recruits to target.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -73,7 +74,7 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dtwilson.github.io/fahb/">fahb</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span> , t <span class="op">=</span> <span class="fl">0.2</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span></span>
+<span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fahb_problem.html">fahb_problem</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">320</span>, m <span class="op">=</span> <span class="fl">20</span>, t_int <span class="op">=</span> <span class="fl">0.2</span>, rel_thr <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run the simulations</span></span>
 <span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/forecast.html">forecast</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span>
@@ -86,29 +87,29 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">design</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Standard progression criteria</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     FPR         FNR        n_p        m_p        r_p</span></span>
-<span><span class="co">#&gt; 1   0.0 0.796003912 25.4242082  1.3232325  8.1958645</span></span>
-<span><span class="co">#&gt; 11  0.1 0.393600671 12.9467906 -0.9914697  6.3969204</span></span>
-<span><span class="co">#&gt; 21  0.2 0.271482465  9.4408576  1.4705756  6.0445189</span></span>
-<span><span class="co">#&gt; 41  0.4 0.137487774  2.7714409 -0.7881610  5.5044016</span></span>
-<span><span class="co">#&gt; 51  0.5 0.098504960 -0.1603635  0.3890277  5.0824694</span></span>
-<span><span class="co">#&gt; 71  0.7 0.040240324  0.5494002  0.5706203  3.9297857</span></span>
-<span><span class="co">#&gt; 81  0.8 0.023333799 -0.3250727 -0.4445800  3.3495451</span></span>
-<span><span class="co">#&gt; 91  0.9 0.009501188 -0.4354369  0.9006933  2.2724682</span></span>
-<span><span class="co">#&gt; 101 1.0 0.000000000 -0.6782580 -0.3317336 -0.7786454</span></span>
+<span><span class="co">#&gt;     FPR         FNR        n_p         m_p        r_p</span></span>
+<span><span class="co">#&gt; 1   0.0 0.826086957 26.4699097  4.62511758  8.7729347</span></span>
+<span><span class="co">#&gt; 11  0.1 0.411781206 14.0982270  1.27756467  5.9841116</span></span>
+<span><span class="co">#&gt; 21  0.2 0.283730715  8.7421711  0.44920095  6.3859320</span></span>
+<span><span class="co">#&gt; 41  0.4 0.145301543  2.6732340 -0.44589371  5.6020928</span></span>
+<span><span class="co">#&gt; 51  0.5 0.104908836  0.2255489  0.52603007  5.1955342</span></span>
+<span><span class="co">#&gt; 71  0.7 0.039130435 -0.8229755 -0.14434948  3.9872926</span></span>
+<span><span class="co">#&gt; 81  0.8 0.021458626 -0.7296959 -0.49522531  3.3632321</span></span>
+<span><span class="co">#&gt; 91  0.9 0.009396914 -0.5483921  1.06629663  2.4837796</span></span>
+<span><span class="co">#&gt; 101 1.0 0.000000000 -0.5295355  0.04794332 -0.6905117</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bayesian approximation</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     FPR         FNR      T_p</span></span>
-<span><span class="co">#&gt; 1   0.0 1.000000000 1.170344</span></span>
-<span><span class="co">#&gt; 11  0.1 0.355595920 3.202008</span></span>
-<span><span class="co">#&gt; 21  0.2 0.256112896 3.371313</span></span>
-<span><span class="co">#&gt; 41  0.4 0.125052396 3.674652</span></span>
-<span><span class="co">#&gt; 51  0.5 0.086209306 3.798104</span></span>
-<span><span class="co">#&gt; 71  0.7 0.037306134 4.023844</span></span>
-<span><span class="co">#&gt; 81  0.8 0.024311863 4.140242</span></span>
-<span><span class="co">#&gt; 91  0.9 0.009501188 4.302493</span></span>
-<span><span class="co">#&gt; 101 1.0 0.000000000 4.676375</span></span>
+<span><span class="co">#&gt; 1   0.0 1.000000000 1.237585</span></span>
+<span><span class="co">#&gt; 11  0.1 0.375175316 3.181149</span></span>
+<span><span class="co">#&gt; 21  0.2 0.263253857 3.357522</span></span>
+<span><span class="co">#&gt; 41  0.4 0.133660589 3.641103</span></span>
+<span><span class="co">#&gt; 51  0.5 0.091023843 3.755226</span></span>
+<span><span class="co">#&gt; 71  0.7 0.039971950 3.997307</span></span>
+<span><span class="co">#&gt; 81  0.8 0.020476858 4.128723</span></span>
+<span><span class="co">#&gt; 91  0.9 0.009256662 4.284346</span></span>
+<span><span class="co">#&gt; 101 1.0 0.000000000 4.692425</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; FPR - False Positive Rate</span></span>
 <span><span class="co">#&gt; FNR - False Negative Rate</span></span>
@@ -124,7 +125,7 @@
 <p><img src="reference/figures/README-unnamed-chunk-2-1.png" alt="" width="100%"></p>
 <p>Two types of decision rules are considered here. Firstly, we consider rules which take the same form as the standard progression criteria suggested by the NIHR. In the table output, <code>n_p</code> is a minimum number of participants recruited, <code>m_p</code> is a minimum number of sites opened, and <code>r_p</code> is a minimum rate of recruitment (participants per site-year), and we progress to the main trial only if all of these thresholds are met.</p>
 <p>The second type of decision rules is defined by <code>T_p</code>, the maximum expected time until full recruitment conditional on the pilot data. We progress to the main trial only if the actual posterior predictive expectation is lower than this threshold.</p>
-<p>Decision rules of both types are characterised by their false positive (<code>FPR</code>) and false negative (<code>FNR</code>) rates. These are estimated via simulation by comparing the decisions made with the underlying feasibility, as determined by the threshold <code>rel_thr</code>. For example, we can attain <code>FPR = 0.15</code> and <code>FNR = 0.34</code> if we proceed only if we recruit at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>10.48</mn><annotation encoding="application/x-tex">10.48</annotation></semantics></math> participants from at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> site, with an overall rate of at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>6.57</mn><annotation encoding="application/x-tex">6.57</annotation></semantics></math> participants per site-year. We can get slightly better operating characteristics if we use a Bayesian progression rules instead. If we want to improve the pilot further we can increase the design variable <code>t</code> so that the internal pilot will have more data.</p>
+<p>Decision rules of both types are characterised by their false positive (<code>FPR</code>) and false negative (<code>FNR</code>) rates. These are estimated via simulation by comparing the decisions made with the underlying feasibility, as determined by the threshold <code>rel_thr</code>. For example, we can attain <code>FPR = 0.15</code> and <code>FNR = 0.34</code> if we proceed only if we recruit at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>10.48</mn><annotation encoding="application/x-tex">10.48</annotation></semantics></math> participants from at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> site, with an overall rate of at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>6.57</mn><annotation encoding="application/x-tex">6.57</annotation></semantics></math> participants per site-year. We can get slightly better operating characteristics if we use a Bayesian progression rules instead. If we want to improve the pilot further we can increase the design variable <code>t_int</code> so that the internal pilot will have more data.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">

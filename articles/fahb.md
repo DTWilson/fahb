@@ -40,7 +40,7 @@ $$\begin{aligned}
 \end{aligned}$$ where $\delta,\epsilon,\mu,\nu,\rho$ and $\pi$ are known
 hyperparameters. We assume that the three parameters are independent, so
 that the joint prior is the product of the three component priors. The
-**model** is therefore fully specified by these six hyperparameters.
+model is therefore fully specified by these six hyperparameters.
 
 ### The trial
 
@@ -52,7 +52,7 @@ recruit, in years). A final piece of necessary information is the
 threshold we will use to denote whether a trial is feasible or not. We
 specify this as a multiple of the expected time to fully recruit.
 
-Thus, the **trial** is fully specified by these four variables.
+Thus, the trial is fully specified by these four variables.
 
 ## Example - GUSTO
 
@@ -73,7 +73,7 @@ uncertainty. We can then use all this information to specify the problem
 in the form of a `fahb_problem` object:
 
 ``` r
-problem <- fahb_problem(N = 320, m = 20 , t_int = 0.167, rel_thr = 1.2, 
+problem <- fahb_problem(N = 320, m = 20, t_int = 0.167, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
                         sd_rr_hps = c(30, 100))
@@ -172,7 +172,7 @@ If we want to improve the OCs, we need more information in the internal
 pilot. For example, we could instead wait until time $t = 12/36$:
 
 ``` r
-problem <- fahb_problem(N = 320, m = 20 , t = 0.336, rel_thr = 1.2, 
+problem <- fahb_problem(N = 320, m = 20 , t_int = 0.336, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
                         sd_rr_hps = c(30, 100))
