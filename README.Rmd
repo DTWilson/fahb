@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/DTWilson/fahb//branch/main/graph/badge.svg)](https://app.codecov.io/gh/DTWilson/fahb)
 <!-- badges: end -->
 
 The goal of `fahb` is to help with clinical trial **f**easibility **a**ssessment via **h**ierarchical **B**ayesian recruitment models, fitted to (internal or external) pilot date. It can be used at the design stage to optimise the pilot and any pre-specified decision rules to guide progression, and at the analysis stage to produce a probabilistic prediction of the time until the main trial recruits to target.
