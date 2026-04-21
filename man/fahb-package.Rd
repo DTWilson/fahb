@@ -9,6 +9,13 @@
 Tools for simulation, design, and analysis of internal pilot trials
 using frequentist and Bayesian operating characteristics.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://dtwilson.github.io/fahb/}
+}
+
+}
 \author{
 \strong{Maintainer}: Duncan Wilson \email{d.t.wilson@leeds.ac.uk} (\href{https://orcid.org/0000-0001-7949-8718}{ORCID}) [copyright holder]
 

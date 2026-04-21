@@ -7,7 +7,7 @@
 fahb_problem(
   N = 320,
   m = 20,
-  t_int = 0.167,
+  t = 0.5,
   n_ext = NULL,
   m_ext = NULL,
   rel_thr = 1.2,
@@ -21,8 +21,7 @@ fahb_problem(
 
 \item{m}{number of recruiting sites.}
 
-\item{t_int}{timing of an internal pilot analysis, as a proportion of the
-expected time to recruit.}
+\item{t}{timing of the pilot analysis in years.}
 
 \item{n_ext}{number of participants to recruit to an external pilot.}
 
