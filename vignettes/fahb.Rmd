@@ -10,7 +10,7 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment = "#>"
 )
 ```
 
@@ -58,7 +58,7 @@ Let's apply this framework to specifying a particular problem. The GUSTO trial a
 Pre-trial feasibility assessments of recruiting sites led to an estimated total recruitment rate of 13 participants per month from all sites, and an estimated site opening rate of 10.53 sites per year. We constructed prior distributions for $\beta, \sigma$ and $\lambda$ which matched these expectations and allowed a realistic degree of prior uncertainty. We can then use all this information to specify the problem in the form of a `fahb_problem` object:
 
 ```{r}
-problem <- fahb_problem(N = 320, m = 20 , t_int = 0.167, rel_thr = 1.2, 
+problem <- fahb_problem(N = 320, m = 20, t_int = 0.167, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
                         sd_rr_hps = c(30, 100))
@@ -115,7 +115,7 @@ That is, the standard progression criteria tell us we should proceed only if we 
 If we want to improve the OCs, we need more information in the internal pilot. For example, we could instead wait until time $t = 12/36$:
 
 ```{r}
-problem <- fahb_problem(N = 320, m = 20 , t = 0.336, rel_thr = 1.2, 
+problem <- fahb_problem(N = 320, m = 20 , t_int = 0.336, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
                         sd_rr_hps = c(30, 100))
