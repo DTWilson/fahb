@@ -28,10 +28,14 @@ fahb_design <- function(problem, quietly = TRUE){
     stop("Problem does not contain trial simulations - see fahb::forecast()")
   }
   
-  cat("Searching for efficient progression criteria...\n")
+  if(!quietly){
+    message("Searching for efficient progression criteria...\n")
+  }
   PC_OCs <- prog_crit_ocs(problem)
 
-  cat("Approximating Bayesian operating characteristics...\n")
+  if(!quietly){
+    message("Approximating Bayesian operating characteristics...\n")
+  }
   Bayes_OCs <- bayesian_ocs(problem)
 
   new_fahb_design(problem,
