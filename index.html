@@ -34,11 +34,13 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="articles/fahb.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/DTWilson/fahb/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -81,35 +83,33 @@
 <span></span>
 <span><span class="co"># Find some candidate decision rules are their OCs</span></span>
 <span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fahb_design.html">fahb_design</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Searching for efficient progression criteria...</span></span>
-<span><span class="co">#&gt; Approximating Bayesian operating characteristics...</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">design</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Standard progression criteria</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     FPR        FNR        n_p        m_p         r_p</span></span>
-<span><span class="co">#&gt; 1   0.0 0.91467814 16.4641589 -0.5926573 13.24656305</span></span>
-<span><span class="co">#&gt; 11  0.1 0.44908435 10.2938437 -0.6705851  6.09395120</span></span>
-<span><span class="co">#&gt; 21  0.2 0.33240844  6.9955302  0.3987109  6.20278434</span></span>
-<span><span class="co">#&gt; 41  0.4 0.18410100 -0.3374165  0.9249259  5.62947944</span></span>
-<span><span class="co">#&gt; 51  0.5 0.13831853  1.6399851  0.6354703  5.01023827</span></span>
-<span><span class="co">#&gt; 71  0.7 0.06076582  0.6879755  0.4335003  3.71864419</span></span>
-<span><span class="co">#&gt; 81  0.8 0.03634850  1.1947214 -0.7722553  2.85460567</span></span>
-<span><span class="co">#&gt; 91  0.9 0.01997780 -0.3148560  0.9080757  1.69344163</span></span>
-<span><span class="co">#&gt; 101 1.0 0.00000000 -0.6494104 -0.8812036 -0.05611385</span></span>
+<span><span class="co">#&gt;     FPR        FNR         n_p          m_p        r_p</span></span>
+<span><span class="co">#&gt; 1   0.0 0.82817058 17.81878829 -0.059458005  9.6590446</span></span>
+<span><span class="co">#&gt; 11  0.1 0.45825809  9.57670582  1.334793215  6.6483566</span></span>
+<span><span class="co">#&gt; 21  0.2 0.31559939  6.90517099  0.182386148  6.0045943</span></span>
+<span><span class="co">#&gt; 41  0.4 0.18030282  1.59558082  0.759740721  5.6010379</span></span>
+<span><span class="co">#&gt; 51  0.5 0.12835116  2.70338476  1.696370342  4.5998899</span></span>
+<span><span class="co">#&gt; 71  0.7 0.05625781  0.14306472  0.904175281  3.5567570</span></span>
+<span><span class="co">#&gt; 81  0.8 0.03681067 -0.30186503  0.937890251  2.8416713</span></span>
+<span><span class="co">#&gt; 91  0.9 0.02222531 -0.90403448 -0.022824150  1.9307604</span></span>
+<span><span class="co">#&gt; 101 1.0 0.00000000  0.01221748  0.008838253 -0.7620012</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bayesian approximation</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     FPR        FNR      T_p</span></span>
-<span><span class="co">#&gt; 1   0.0 1.00000000 1.334127</span></span>
-<span><span class="co">#&gt; 11  0.1 0.44048280 3.115271</span></span>
-<span><span class="co">#&gt; 21  0.2 0.32311321 3.297020</span></span>
-<span><span class="co">#&gt; 41  0.4 0.17092120 3.567992</span></span>
-<span><span class="co">#&gt; 51  0.5 0.13249168 3.677042</span></span>
-<span><span class="co">#&gt; 71  0.7 0.06298557 3.891836</span></span>
-<span><span class="co">#&gt; 81  0.8 0.03648724 4.010800</span></span>
-<span><span class="co">#&gt; 91  0.9 0.02261376 4.133067</span></span>
-<span><span class="co">#&gt; 101 1.0 0.00000000 4.509784</span></span>
+<span><span class="co">#&gt; 1   0.0 1.00000000 1.441843</span></span>
+<span><span class="co">#&gt; 11  0.1 0.42366995 3.123216</span></span>
+<span><span class="co">#&gt; 21  0.2 0.31309904 3.298833</span></span>
+<span><span class="co">#&gt; 41  0.4 0.16335602 3.594781</span></span>
+<span><span class="co">#&gt; 51  0.5 0.11543270 3.721615</span></span>
+<span><span class="co">#&gt; 71  0.7 0.05723017 3.916746</span></span>
+<span><span class="co">#&gt; 81  0.8 0.03653285 4.001302</span></span>
+<span><span class="co">#&gt; 91  0.9 0.02139186 4.085859</span></span>
+<span><span class="co">#&gt; 101 1.0 0.00000000 4.554172</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; FPR - False Positive Rate</span></span>
 <span><span class="co">#&gt; FNR - False Negative Rate</span></span>
@@ -128,7 +128,15 @@
 <p>Decision rules of both types are characterised by their false positive (<code>FPR</code>) and false negative (<code>FNR</code>) rates. These are estimated via simulation by comparing the decisions made with the underlying feasibility, as determined by the threshold <code>rel_thr</code>. For example, we can attain <code>FPR = 0.15</code> and <code>FNR = 0.34</code> if we proceed only if we recruit at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>10.48</mn><annotation encoding="application/x-tex">10.48</annotation></semantics></math> participants from at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> site, with an overall rate of at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>6.57</mn><annotation encoding="application/x-tex">6.57</annotation></semantics></math> participants per site-year. We can get slightly better operating characteristics if we use a Bayesian progression rules instead. If we want to improve the pilot further we can increase the design variable <code>t_int</code> so that the internal pilot will have more data.</p>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/DTWilson/fahb/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/DTWilson/fahb/issues" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>

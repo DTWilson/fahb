@@ -7,6 +7,9 @@
 
 ## Citation
 
+Source:
+[`DESCRIPTION`](https://github.com/DTWilson/fahb/blob/main/DESCRIPTION)
+
 Wilson D (2026). *fahb: Design and Analysis of Pilot Trials Assessing
 Recruitment Feasibility*. R package version 0.0.0.9000,
 <https://dtwilson.github.io/fahb/>.

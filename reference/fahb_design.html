@@ -21,8 +21,10 @@ based on a Bayesian analysis of the pilot trial data, or both.'><meta property="
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fahb.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/DTWilson/fahb/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -31,7 +33,7 @@ based on a Bayesian analysis of the pilot trial data, or both.'><meta property="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a <code>fahb</code> design object</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/DTWilson/fahb/blob/main/R/fahb_design.R" class="external-link"><code>R/fahb_design.R</code></a></small>
       <div class="d-none name"><code>fahb_design.Rd</code></div>
     </div>
 
@@ -68,33 +70,31 @@ steps have been completed will be printed to the console. Defaults to TRUE.</p><
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="forecast.html">forecast</a></span><span class="op">(</span><span class="fu"><a href="fahb_problem.html">fahb_problem</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">fahb_design</span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Searching for efficient progression criteria...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Approximating Bayesian operating characteristics...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Standard progression criteria</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     FPR        FNR        n_p         m_p        r_p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.0 0.86880265 21.3552635  0.81522734  8.7466348</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11  0.1 0.46402431  8.2955576 -0.38310956  7.4143933</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21  0.2 0.31791189  6.7866628  1.39870227  6.1379261</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41  0.4 0.17704737  1.2592333  0.24815936  5.5555748</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51  0.5 0.13520232  1.1537850 -0.36004287  5.0054985</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 71  0.7 0.06035078 -0.4994518 -0.98294471  3.6320801</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 81  0.8 0.03563044 -0.5706294 -0.73072608  2.9241932</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 91  0.9 0.01850573 -0.1996063 -0.33565730  1.6410583</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 101 1.0 0.00000000 -0.4333531 -0.08941742 -0.7541021</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     FPR        FNR         n_p          m_p        r_p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.0 0.84716459 20.18122245 -0.278143277  8.5807397</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11  0.1 0.45587828  7.90948099 -0.423520544  7.4329207</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21  0.2 0.32295989  7.90948099 -0.664581560  5.5612174</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41  0.4 0.17123098  2.71569274  0.191882895  5.3566370</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51  0.5 0.12489627 -0.71292714 -0.156142535  4.8623610</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71  0.7 0.06058091  1.05988571  0.008010569  3.6066649</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 81  0.8 0.03540802 -0.06842219 -0.972522072  2.8487965</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 91  0.9 0.01950207 -0.27984834  0.122160586  1.6897025</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101 1.0 0.00000000 -0.75580849  0.023558708 -0.9489437</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bayesian approximation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     FPR        FNR      T_p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.0 1.00000000 1.340823</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11  0.1 0.42604613 3.132955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21  0.2 0.30672559 3.300352</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41  0.4 0.16102748 3.582629</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51  0.5 0.11973484 3.700791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 71  0.7 0.06007458 3.910858</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 81  0.8 0.03659716 4.012609</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 91  0.9 0.01822953 4.147183</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 101 1.0 0.00000000 4.544340</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.0 1.00000000 1.305437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11  0.1 0.42627939 3.136244</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21  0.2 0.30470263 3.307470</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41  0.4 0.16141079 3.590653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51  0.5 0.11881051 3.712487</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 71  0.7 0.05947441 3.916642</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 81  0.8 0.03734440 4.015426</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 91  0.9 0.01977870 4.133968</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 101 1.0 0.00000000 4.486299</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FPR - False Positive Rate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FNR - False Negative Rate</span>

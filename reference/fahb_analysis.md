@@ -42,14 +42,30 @@ An object of class `fahb_analysis`.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+## Example illustrating a full analysis workflow
+## (Not run on CRAN due to Bayesian model fitting)
+
+# \donttest{
+problem <- fahb_problem()
 problem <- forecast(problem, n_sims = 500)
 
+## Pilot trial data
 n_pilot <- c(3, 5, 2)
 t_pilot <- c(0.5, 0.6, 0.4)
 
-analysis <- fahb_analysis(n_pilot, t_pilot, problem)
+analysis <- fahb_analysis(
+  n_pilot = n_pilot,
+  t_pilot = t_pilot,
+  problem = problem
+)
+#> Compiling the model...
+#> Error in .fun(model_code = .x1) : 
+#>   Boost not found; call install.packages('BH')
+#> Error in .fun(model_code = .x1): Boost not found; call install.packages('BH')
+
 print(analysis)
+#> Error: object 'analysis' not found
 plot(analysis)
-} # }
+#> Error: object 'analysis' not found
+# }
 ```

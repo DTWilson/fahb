@@ -9,6 +9,10 @@ Useful links:
 
 - <https://dtwilson.github.io/fahb/>
 
+- <https://github.com/DTWilson/fahb>
+
+- Report bugs at <https://github.com/DTWilson/fahb/issues>
+
 ## Author
 
 **Maintainer**: Duncan Wilson <d.t.wilson@leeds.ac.uk>
