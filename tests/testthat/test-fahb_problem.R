@@ -49,15 +49,10 @@ test_that("N and m must be >= 1", {
   )
 })
 
-test_that("t must be in [0, 1]", {
+test_that("t must be > 0", {
   expect_error(
     fahb_problem(t = -0.1),
-    "t must be in \\[0,1\\]"
-  )
-  
-  expect_error(
-    fahb_problem(t = 1.1),
-    "t must be in \\[0,1\\]"
+    "t must be > 0"
   )
 })
 

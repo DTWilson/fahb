@@ -71,8 +71,8 @@ fahb_problem <- function(N = 320, m = 20 , t = 0.5,
     }
   }
   
-  if(t < 0 | t > 1){
-    stop("t must be in [0,1]")
+  if(t < 0){
+    stop("t must be > 0")
   }
   
   # Check inputs make sense

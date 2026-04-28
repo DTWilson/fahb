@@ -6,7 +6,7 @@ Authors@R:
     role = c("aut", "cre", "cph"), comment = c(ORCID = "0000-0001-7949-8718"))
 Description: Find optimal decisions rules for guiding progression decisions 
     following a pilot trial, assuming a hierarchical recruitment model. Estimate 
-    (probabilisticaly) the time until the main trial recruits to target, given 
+    (probabilistically) the time until the main trial recruits to target, given 
     the recruitment data observed in the pilot.
 License: MIT + file LICENSE
 Encoding: UTF-8
