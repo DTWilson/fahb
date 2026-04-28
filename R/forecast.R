@@ -10,7 +10,7 @@
 #'
 #' @examples
 #' problem <- fahb_problem()
-#' problem <- forecast(problem)
+#' problem <- forecast(problem, n_sims = 10^3)
 #' 
 forecast <- function(problem, n_sims = 10^4, overwrite = FALSE){
   

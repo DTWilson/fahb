@@ -20,7 +20,7 @@ new_fahb_design <- function(problem,
 #' @export
 #'
 #' @examples
-#' problem <- forecast(fahb_problem())
+#' problem <- forecast(fahb_problem(), n_sims = 500)
 #' fahb_design(problem)
 #' 
 fahb_design <- function(problem, quietly = TRUE){

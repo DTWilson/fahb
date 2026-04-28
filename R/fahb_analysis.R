@@ -31,7 +31,7 @@ new_fahb_analysis <- function(PC_stats, Bayes_stats,
 #'
 #' \donttest{
 #' problem <- fahb_problem()
-#' problem <- forecast(problem, n_sims = 500)
+#' problem <- forecast(problem)
 #'
 #' ## Pilot trial data
 #' n_pilot <- c(3, 5, 2)

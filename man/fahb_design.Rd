@@ -21,7 +21,7 @@ These can include rules of the standard "progression criteria form", or rules
 based on a Bayesian analysis of the pilot trial data, or both.
 }
 \examples{
-problem <- forecast(fahb_problem())
+problem <- forecast(fahb_problem(), n_sims = 500)
 fahb_design(problem)
 
 }
