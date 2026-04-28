@@ -89,7 +89,7 @@ the Bayesian analysis via <code>brms::update()</code> to avoid compiling a new m
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="fahb_problem.html">fahb_problem</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="forecast.html">forecast</a></span><span class="op">(</span><span class="va">problem</span>, n_sims <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">problem</span> <span class="op">&lt;-</span> <span class="fu"><a href="forecast.html">forecast</a></span><span class="op">(</span><span class="va">problem</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Pilot trial data</span></span></span>
 <span class="r-in"><span><span class="va">n_pilot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span></span></span>
@@ -110,11 +110,11 @@ the Bayesian analysis via <code>brms::update()</code> to avoid compiling a new m
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Expected posterior predictive time to recruit:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> exp_pp_T </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3.545051 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3.538887 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior predictive distribution quantiles:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     0.5%     2.5%      20%      50%      80%    97.5%    99.5% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2.279105 2.522356 3.025034 3.470918 4.022959 4.964665 5.563473 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2.258355 2.531464 3.018079 3.475001 4.014829 4.917012 5.566843 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior site opening rate hyperparamaters (Gamma):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> shape  rate </span>

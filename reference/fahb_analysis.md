@@ -47,7 +47,7 @@ An object of class `fahb_analysis`.
 
 # \donttest{
 problem <- fahb_problem()
-problem <- forecast(problem, n_sims = 500)
+problem <- forecast(problem)
 
 ## Pilot trial data
 n_pilot <- c(3, 5, 2)
@@ -68,11 +68,11 @@ print(analysis)
 #> 
 #> Expected posterior predictive time to recruit:
 #> exp_pp_T 
-#> 3.545051 
+#> 3.538887 
 #> 
 #> Posterior predictive distribution quantiles:
 #>     0.5%     2.5%      20%      50%      80%    97.5%    99.5% 
-#> 2.279105 2.522356 3.025034 3.470918 4.022959 4.964665 5.563473 
+#> 2.258355 2.531464 3.018079 3.475001 4.014829 4.917012 5.566843 
 #> 
 #> Posterior site opening rate hyperparamaters (Gamma):
 #> shape  rate 

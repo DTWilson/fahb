@@ -31,5 +31,5 @@ an object of class `fahb_problem`.
 
 ``` r
 problem <- fahb_problem()
-problem <- forecast(problem)
+problem <- forecast(problem, n_sims = 10^3)
 ```
