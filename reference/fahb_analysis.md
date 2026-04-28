@@ -60,8 +60,8 @@ analysis <- fahb_analysis(
 )
 #> Compiling the model...
 #> Error in .fun(model_code = .x1) : 
-#>   Boost not found; call install.packages('BH')
-#> Error in .fun(model_code = .x1): Boost not found; call install.packages('BH')
+#>   Eigen not found; call install.packages('RcppEigen')
+#> Error in .fun(model_code = .x1): Eigen not found; call install.packages('RcppEigen')
 
 print(analysis)
 #> Error: object 'analysis' not found
