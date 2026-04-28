@@ -59,13 +59,37 @@ analysis <- fahb_analysis(
   problem = problem
 )
 #> Compiling the model...
-#> Error in .fun(model_code = .x1) : 
-#>   Eigen not found; call install.packages('RcppEigen')
-#> Error in .fun(model_code = .x1): Eigen not found; call install.packages('RcppEigen')
+#> the number of chains is less than 1; sampling not done
 
 print(analysis)
-#> Error: object 'analysis' not found
+#> Standard progression criteria statistics:
+#>       n_p       m_p       r_p 
+#> 10.000000  3.000000  6.666667 
+#> 
+#> Expected posterior predictive time to recruit:
+#> exp_pp_T 
+#> 3.545051 
+#> 
+#> Posterior predictive distribution quantiles:
+#>     0.5%     2.5%      20%      50%      80%    97.5%    99.5% 
+#> 2.279105 2.522356 3.025034 3.470918 4.022959 4.964665 5.563473 
+#> 
+#> Posterior site opening rate hyperparamaters (Gamma):
+#> shape  rate 
+#> 33.00  3.35 
+#> 
 plot(analysis)
-#> Error: object 'analysis' not found
+#> [[1]]
+
+#> 
+#> [[2]]
+
+#> 
+#> [[3]]
+
+#> 
+#> [[4]]
+
+#> 
 # }
 ```

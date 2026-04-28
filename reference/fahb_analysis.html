@@ -101,14 +101,38 @@ the Bayesian analysis via <code>brms::update()</code> to avoid compiling a new m
 <span class="r-in"><span>  problem <span class="op">=</span> <span class="va">problem</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Compiling the model...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Error in .fun(model_code = .x1) : </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Eigen not found; call install.packages('RcppEigen')</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in .fun(model_code = .x1):</span> Eigen not found; call install.packages('RcppEigen')</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> the number of chains is less than 1; sampling not done</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">analysis</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'analysis' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Standard progression criteria statistics:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       n_p       m_p       r_p </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10.000000  3.000000  6.666667 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Expected posterior predictive time to recruit:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> exp_pp_T </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3.545051 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Posterior predictive distribution quantiles:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     0.5%     2.5%      20%      50%      80%    97.5%    99.5% </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2.279105 2.522356 3.025034 3.470918 4.022959 4.964665 5.563473 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Posterior site opening rate hyperparamaters (Gamma):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> shape  rate </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33.00  3.35 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">analysis</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'analysis' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-plt img"><img src="fahb_analysis-1.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-plt img"><img src="fahb_analysis-2.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]</span>
+<span class="r-plt img"><img src="fahb_analysis-3.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
+<span class="r-plt img"><img src="fahb_analysis-4.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
