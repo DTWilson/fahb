@@ -11,13 +11,13 @@ Source:
 [`DESCRIPTION`](https://github.com/DTWilson/fahb/blob/main/DESCRIPTION)
 
 Wilson D (2026). *fahb: Design and Analysis of Pilot Trials Assessing
-Recruitment Feasibility*. R package version 0.0.0.9000,
+Recruitment Feasibility*. R package version 1.0.0,
 <https://dtwilson.github.io/fahb/>.
 
     @Manual{,
       title = {fahb: Design and Analysis of Pilot Trials Assessing Recruitment Feasibility},
       author = {Duncan Wilson},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 1.0.0},
       url = {https://dtwilson.github.io/fahb/},
     }
