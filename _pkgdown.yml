@@ -2,4 +2,8 @@ url: https://dtwilson.github.io/fahb/
 template:
   bootstrap: 5
   bootswatch: flatly
+news:
+  releases:
+  - text: "fahb 1.0.0"
+    href: https://lictr.github.io/2026/04/27/fahb.html
 
