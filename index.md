@@ -13,6 +13,7 @@ target.
 Install the released version of `fahb` from CRAN:
 
 ``` r
+
 install.packages("fahb")
 ```
 
@@ -20,6 +21,7 @@ Or you can install the development version of `fahb` from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("DTWilson/fahb")
 ```
@@ -44,6 +46,7 @@ before finding possible decision rules and the operating characteristics
 they lead to:
 
 ``` r
+
 library(fahb)
 
 problem <- fahb_problem(N = 320, m = 20, t = 0.5, rel_thr = 1.2)
@@ -113,9 +116,9 @@ Decision rules of both types are characterised by their false positive
 simulation by comparing the decisions made with the underlying
 feasibility, as determined by the threshold `rel_thr`. For example, we
 can attain `FPR = 0.15` and `FNR = 0.34` if we proceed only if we
-recruit at least $10.48$ participants from at least $1$ site, with an
-overall rate of at least $6.57$ participants per site-year. We can get
-slightly better operating characteristics if we use a Bayesian
+recruit at least $`10.48`$ participants from at least $`1`$ site, with
+an overall rate of at least $`6.57`$ participants per site-year. We can
+get slightly better operating characteristics if we use a Bayesian
 progression rules instead. If we want to improve the pilot further we
 can increase the design variable `t_int` so that the internal pilot will
 have more data.

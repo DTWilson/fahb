@@ -1,6 +1,7 @@
 # fahb
 
 ``` r
+
 library(fahb)
 library(patchwork)
 ```
@@ -25,19 +26,25 @@ variability there is between site recruitment rates.
 ### The model
 
 In the `fahb` package we use a hierarchical Poisson mixed model of
-recruitment, which means that site $j \in \{ 1,\ldots,m\}$ recruits
-participants at its own individual rate $\gamma_{j}$, and that these
+recruitment, which means that site $`j \in \{1 , \ldots , m\}`$ recruits
+participants at its own individual rate $`\gamma_j`$, and that these
 rates follow a log-normal distribution:
-$$\ln\gamma_{j} \sim N\left( \beta,\sigma^{2} \right).$$ We also assume
-that sites open according to a Poisson process, with rate $\lambda$.
+``` math
+\ln \gamma_j \sim N(\beta, \sigma^2).
+```
+We also assume that sites open according to a Poisson process, with rate
+$`\lambda`$.
 
-The three parameters in the model $(\lambda,\beta,$ and $\sigma)$ are
-unknown, and so we place prior distributions on each. Formally,
-$$\begin{aligned}
-\lambda & {\sim Gamma(\delta,\epsilon),} \\
-\beta & {\sim N\left( \mu,\nu^{2} \right),} \\
-\sigma & {\sim Gamma(\rho,\pi),}
-\end{aligned}$$ where $\delta,\epsilon,\mu,\nu,\rho$ and $\pi$ are known
+The three parameters in the model $`(\lambda, \beta,`$ and $`\sigma)`$
+are unknown, and so we place prior distributions on each. Formally,
+``` math
+\begin{align}
+    \lambda & \sim Gamma(\delta, \epsilon) ,\\
+    \beta & \sim N(\mu, \nu^2),\\
+    \sigma & \sim Gamma(\rho, \pi),
+\end{align}
+```
+where $`\delta, \epsilon, \mu, \nu, \rho`$ and $`\pi`$ are known
 hyperparameters. We assume that the three parameters are independent, so
 that the joint prior is the product of the three component priors. The
 model is therefore fully specified by these six hyperparameters.
@@ -45,8 +52,8 @@ model is therefore fully specified by these six hyperparameters.
 ### The trial
 
 For a trial with an internal pilot, the trial design is specified by the
-total number to recruit in the full study, $N$, the number of sites,
-$m$, and the timing of the interim analysis, $t$ (in years). A final
+total number to recruit in the full study, $`N`$, the number of sites,
+$`m`$, and the timing of the interim analysis, $`t`$ (in years). A final
 piece of necessary information is the threshold we will use to denote
 whether a trial is feasible or not. We specify this as a multiple of the
 expected time to fully recruit. The trial is therefore fully specified
@@ -55,22 +62,23 @@ by these four variables.
 ## Example - GUSTO
 
 Let’s apply this framework to specifying a particular problem. The GUSTO
-trial aimed to recruit a total of $N = 320$ participants from $m = 20$
-sites over a period of 3 years, and included an internal pilot at
-$t = 0.5$ years into recruitment. We suppose that if the trial recruits
-within `rel_thr = 1.2` times the expected timeframe, we should consider
-it *feasible*; otherwise, we consider it *infeasible* and would ideally
-like to stop early.
+trial aimed to recruit a total of $`N = 320`$ participants from
+$`m = 20`$ sites over a period of 3 years, and included an internal
+pilot at $`t = 0.5`$ years into recruitment. We suppose that if the
+trial recruits within `rel_thr = 1.2` times the expected timeframe, we
+should consider it *feasible*; otherwise, we consider it *infeasible*
+and would ideally like to stop early.
 
 Pre-trial feasibility assessments of recruiting sites led to an
 estimated total recruitment rate of 13 participants per month from all
 sites, and an estimated site opening rate of 10.53 sites per year. We
-constructed prior distributions for $\beta,\sigma$ and $\lambda$ which
-matched these expectations and allowed a realistic degree of prior
+constructed prior distributions for $`\beta, \sigma`$ and $`\lambda`$
+which matched these expectations and allowed a realistic degree of prior
 uncertainty. We can then use all this information to specify the problem
 in the form of a `fahb_problem` object:
 
 ``` r
+
 problem <- fahb_problem(N = 320, m = 20, t = 0.5, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
@@ -79,19 +87,21 @@ problem <- fahb_problem(N = 320, m = 20, t = 0.5, rel_thr = 1.2,
 
 We have tried to use meaningful names for the function arguments,
 splitting the hyperparameters into three 2-element vectors: `so_hps` for
-the site opening rate $\lambda$ (i.e. $\delta$ and $\epsilon$);
+the site opening rate $`\lambda`$ (i.e. $`\delta`$ and $`\epsilon`$);
 `mean_rr_hps` for the central parameter of the recruitment rate
-distribution $\beta$ (i.e. $\mu$ and $\nu$); and `sd_rr_hps` for the
-corresponding dispersion parameter $\sigma$ (i.e. $\rho$ and $\pi$).
+distribution $`\beta`$ (i.e. $`\mu`$ and $`\nu`$); and `sd_rr_hps` for
+the corresponding dispersion parameter $`\sigma`$ (i.e. $`\rho`$ and
+$`\pi`$).
 
 It is generally helpful to visualise prior densities to check they align
 with our prior beliefs, and `fahb` will help you do that via the
 [`check_priors()`](https://dtwilson.github.io/fahb/reference/check_priors.md)
 function. In addition to densities of the three substantive parameters
-$\lambda,\beta$ and $\sigma$, it will also plot the implied prior
+$`\lambda, \beta`$ and $`\sigma`$, it will also plot the implied prior
 distribution of the recruitment rate at a randomly selected site.
 
 ``` r
+
 plots <- check_priors(problem)
 
 (plots[[1]] + plots[[2]]) / (plots[[3]] + plots[[4]])
@@ -126,6 +136,7 @@ function to run the necessary simulations and store them in our
 takes this problem as its argument:
 
 ``` r
+
 set.seed(9278635)
 
 # Run the simulations
@@ -143,6 +154,7 @@ attained and the corresponding thresholds of the decision rules by
 printing the `fahb_design` object:
 
 ``` r
+
 design
 ```
 
@@ -150,6 +162,7 @@ For example, suppose we wanted a FPR of at most 0.2. The two different
 decision rules which minimise the FNR under that constraint are:
 
 ``` r
+
 # Standard progression criteria:
 design$Prog_Crit_OCs[design$Prog_Crit_OCs$FPR == 0.2,]
 
@@ -166,10 +179,11 @@ have negative components which will always be exceeded and are,
 therefore, redundant.
 
 If we want to improve the OCs, we need more information in the internal
-pilot. For example, we could instead wait until $t = 1$ year into the
+pilot. For example, we could instead wait until $`t = 1`$ year into the
 recruitment period:
 
 ``` r
+
 problem <- fahb_problem(N = 320, m = 20 , t = 1, rel_thr = 1.2, 
                         so_hps = c(30, 2.85), 
                         mean_rr_hps = c(2, 0.329), 
@@ -195,16 +209,17 @@ and check if they have all exceeded our chosen thresholds.
 If we are making decisions using the Bayesian approach, the analysis is
 more involved. We need to take our recruitment data and use it to
 estimate the posterior distribution of the three parameters in our model
-($\lambda,\beta$ and $\sigma$) and of the random effects for all the
-sites which opened in the pilot. We then need to use these posteriors to
-estimate the prior predictive distribution of the time until full
-recruitment, $T$.
+($`\lambda, \beta`$ and $`\sigma`$) and of the random effects for all
+the sites which opened in the pilot. We then need to use these
+posteriors to estimate the prior predictive distribution of the time
+until full recruitment, $`T`$.
 
-Suppose our pilot data are recruitment numbers $4,8,0$ and $2$,
-recruited from sites which had been open for $0.5,0.4,0.3$ and $0.2$
-years respectively.
+Suppose our pilot data are recruitment numbers $`4, 8, 0`$ and $`2`$,
+recruited from sites which had been open for $`0.5, 0.4, 0.3`$ and
+$`0.2`$ years respectively.
 
 ``` r
+
 n_pilot <- c(4, 8, 0, 2)
 t_pilot <- c(0.5, 0.4, 0.3, 0.2)
 
@@ -218,6 +233,7 @@ and the `brmsfit` model are both held within the analysis object. This
 is to allow the user to summarise results in other ways if they please.
 
 ``` r
+
 print(analysis)
 
 plots <- plot(analysis)
@@ -234,6 +250,7 @@ time of `t_int = 0.33` of the expected recruitment time of the main
 trial.
 
 ``` r
+
 problem <- fahb_problem(n_ext = 80, m_ext = 6, t_int = 0.33)
 
 problem <- forecast(problem)
@@ -247,6 +264,7 @@ design
 And analysis:
 
 ``` r
+
 n_pilot <- c(4, 8, 0, 2)
 t_pilot <- c(0.5, 0.4, 0.3, 0.2)
 site_t <- 0.6
