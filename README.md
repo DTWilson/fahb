@@ -1,13 +1,14 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# fahb <a href="https://dtwilson.github.io/fahb/"><img src="man/figures/logo.png" align="right" height="139" alt="tout website" /></a>
+# fahb <a href="https://dtwilson.github.io/fahb/"><img src="man/figures/logo.png" align="right" height="139" alt="fahb website" /></a>
 
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/DTWilson/fahb/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/DTWilson/fahb//branch/main/graph/badge.svg)](https://app.codecov.io/gh/DTWilson/fahb)
+[![Downloads](https://cranlogs.r-pkg.org/badges/grand-total/fahb)](https://cran.r-project.org/package=fahb)
 <!-- badges: end -->
 
 The goal of `fahb` is to help with clinical trial **f**easibility
