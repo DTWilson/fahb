@@ -10,26 +10,26 @@ This document records the design and analysis of a simulation study comparing me
 
 ## Variables and paramerters
 
-Using the syntax of the code, we have the following design variables:
+Using the syntax of the `fahb` package, we have the following design variables:
 
--   `m` - the number of sites to open over the full trial
--   `int_t` - the timing of the pilot interim analysis, expressed as a proportion of the expected time to recruit to target
--   `target_n` - the target sample size which will lead to recruitment stopping
+-   `m` - the number of sites to open over the course of the full trial.
+-   `t` - the timing of the pilot interim analysis, expressed as a proportion of the expected time to recruit to target.
+-   `N` - the target sample size which, when attained, will stop recruitment.
 
 We also have some model parameters:
 
--   `beta_0` and `sqrt(var_l)` - parameters for the log-normal distribution of the site recruitment rates
--   `setup_r` - the setup rate for sites
+-   `beta` and `sigma` - mean and standard deviation parameters for the log-normal distribution of the site recruitment rates.
+-   `lambda` - the rate describing the Poisson process of site opening.
 
-Becuase we have a Bayesian model, the parameters to vary in a simulation study are actually the hyper-parameters describing the priors for the three substantive parameters above. We have:
+Because we have a Bayesian model, the parameters to vary in a simulation study are actually the hyper-parameters describing the priors for the three substantive parameters above. We have:
 
--   `beta_m` and `beta_s` - parameters of the normal prior on `beta_0`
--   `v_df` and `v_c` - parameters of the gamma prior on `sqrt(var_l)`
--   `setup_r_a` and `setup_r_b` - parameters of the gamma prior on `setup_r`
+-   `mu` and `nu` - mean and sd parameters of the normal prior on `beta`.
+-   `rho` and `pi` - shape and rate parameters of the gamma prior on `sigma`.
+-   `delta` and `epsilon` - shape and rate parameters of the gamma prior on `lambda`.
 
 ## Scenarios
 
-We will define scenariuos by taking low or high values for:
+We define scenarios by taking low or high values for:
 
 -   The design parameters;
 -   The expected prior values of the three substantive model parameters; and
@@ -37,135 +37,140 @@ We will define scenariuos by taking low or high values for:
 
 For `m`, we will use 10 (low) or 30 (high).
 
-For `int_t` we will use 0.2 (low) or 0.5 (high).
+For `t` we will use 0.2 (low) or 0.5 (high).
 
-For `target_n` we will use 352 (low) or 788 (hgih). These correspond to total numbers of patients needed to detect an effect of 0.3 or 0.2 respectively, with a two-sided type I error rate of 0.05 and a power of 0.8.
+For `N` we will use 352 (low) or 788 (hgih). These correspond to total numbers of patients needed to detect an effect of 0.3 or 0.2 respectively, with a two-sided type I error rate of 0.05 and a power of 0.8.
 
-For the expectation of `beta_0` we will use 6 (low) or 20 (high) patients per site per year.
+For the expectation of `beta` we will use 6 (low) or 20 (high) patients per site per year.
 
-For the expectation of `sqrt((var_l)` we will use 1 (low) or 3 (high).
+For the expectation of `sigma` we will use 1 (low) or 3 (high).
 
-For the expectation of `setup_r` we will use 5 (low) and 15 (high) sites per year.
+For the expectation of `lambda` we will use 5 (low) and 15 (high) sites per year.
 
-For each of these parameters and each of these settings, we want a version with low prior uncertainty and one with high prior uncertainty. First, `beta_0`:
+For each of these parameters and each of these settings, we want a version (defined through a choice of corresponding hyper-parameters) with low prior uncertainty and one with high prior uncertainty. First, `beta`:
 
 ```{r}
+pred_params <- function(mean_rr_hps){
+  # For a given parameter vector (mu, nu), calculate the expectation and sd
+  # of a randomly sampled site recruitment rate
+  mean <- exp(mean_rr_hps[1] + mean_rr_hps[2]^2/2) 
+  sd <- sqrt(exp(mean_rr_hps[2]^2 + 2)*sqrt(exp(mean_rr_hps[2]^2) - 1))
+  c(mean, sd)
+}
+
 # Low expectation, low variance
-beta_m <- 1.79; beta_s <- sqrt(2*(log(6) - beta_m))
-beta_s
-exp(beta_m + beta_s^2/2); sqrt(exp(beta_s^2 + 2)*sqrt(exp(beta_s^2) - 1))
+mean_rr_hps <- c(1.79, sqrt(2*(log(6) - 1.79)))
+pred_params(mean_rr_hps)
+mean_rr_hps
+# 1.79, 0.05932064
 
 # Low expectation, high variance
-beta_m <- 1.75; beta_s <- sqrt(2*(log(6) - beta_m))
-beta_s
-exp(beta_m + beta_s^2/2); sqrt(exp(beta_s^2 + 2)*sqrt(exp(beta_s^2) - 1))
+mean_rr_hps <- c(1.75, sqrt(2*(log(6) - 1.75)))
+pred_params(mean_rr_hps)
+mean_rr_hps
+# 1.7500000 0.2889964
 
 # High expectation, low variance
-beta_m <- 2.994; beta_s <- sqrt(2*(log(20) - beta_m))
-beta_s
-exp(beta_m + beta_s^2/2); sqrt(exp(beta_s^2 + 2)*sqrt(exp(beta_s^2) - 1))
+mean_rr_hps <- c(2.994, sqrt(2*(log(20) - 2.994)))
+pred_params(mean_rr_hps)
+mean_rr_hps
+# 2.9940000 0.0588604
 
 # Low expectation, high variance
-beta_m <- 2.954; beta_s <- sqrt(2*(log(20) - beta_m))
-beta_s
-exp(beta_m + beta_s^2/2); sqrt(exp(beta_s^2 + 2)*sqrt(exp(beta_s^2) - 1))
+mean_rr_hps <- c(2.954, sqrt(2*(log(20) - 2.954)))
+pred_params(mean_rr_hps)
+mean_rr_hps
+# 2.9540000 0.2889023
 ```
 
-Now `sqrt(var_l)`:
+Now `sigma`:
 
 ```{r}
 library(extraDistr)
 
-# Low expectation (0.05), low variance
-v_sh <- 100; v_r <- v_sh/0.05
-v_r
-v_sh/v_r; sqrt(v_sh/(v_r^2))
+# Low expectation, low variance
+sd_rr_hps <- c(100, 100/0.05)
+sd_rr_hps[1]/sd_rr_hps[2]; sqrt(sd_rr_hps[1]/sd_rr_hps[2]^2)
+
 
 # Low expectation, high variance
-v_sh <- 5; v_r <- v_sh/0.05
-v_r
-v_sh/v_r; sqrt(v_sh/(v_r^2))
+sd_rr_hps <- c(5, 5/0.05)
+sd_rr_hps[1]/sd_rr_hps[2]; sqrt(sd_rr_hps[1]/sd_rr_hps[2]^2)
+
 
 # High expectation (0.3), low variance
-v_sh <- 500; v_r <- v_sh/0.3
-v_r
-v_sh/v_r; sqrt(v_sh/(v_r^2))
+sd_rr_hps <- c(500, 500/0.3)
+sd_rr_hps[1]/sd_rr_hps[2]; sqrt(sd_rr_hps[1]/sd_rr_hps[2]^2)
+
 
 # High expectation, high variance
-v_sh <- 30; v_r <- v_sh/0.3
-v_r
-v_sh/v_r; sqrt(v_sh/(v_r^2))
+sd_rr_hps <- c(30, 30/0.3)
+sd_rr_hps[1]/sd_rr_hps[2]; sqrt(sd_rr_hps[1]/sd_rr_hps[2]^2)
 ```
 
-And finally, `setup_r`:
+And finally, `lambda`:
 
 ```{r}
 # Low expectation, low variance
-setup_r_a <- 200; setup_r_b <- setup_r_a/5
-setup_r_b
-setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
+so_hps <- c(200, 200/5)
+so_hps[1]/so_hps[2]; sqrt(so_hps[1]/so_hps[2]^2)
 
 # Low expectation, high variance
-setup_r_a <- 10; setup_r_b <- setup_r_a/5
-setup_r_b
-setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
+so_hps <- c(10, 10/5)
+so_hps[1]/so_hps[2]; sqrt(so_hps[1]/so_hps[2]^2)
 
 # High expectation, low variance
-setup_r_a <- 1800; setup_r_b <- setup_r_a/15
-setup_r_b
-setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
+so_hps <- c(1800, 1800/15)
+so_hps[1]/so_hps[2]; sqrt(so_hps[1]/so_hps[2]^2)
 
 # High expectation, high variance
-setup_r_a <- 90; setup_r_b <- setup_r_a/15
-setup_r_b
-setup_r_a/setup_r_b; sqrt(setup_r_a/(setup_r_b^2))
+so_hps <- c(90, 90/15)
+so_hps[1]/so_hps[2]; sqrt(so_hps[1]/so_hps[2]^2)
 ```
 
 Now we put all these variations into a .csv file to be read in during the batch. Note we will replicate each scenario 10 times, running 10\^4 simulations in each component.
 
 ```{r}
 m <- c(10, 30)
-int_t <- c(0.2, 0.5)
-target_n <- c(352,  788)
+t <- c(0.2, 0.5)
+N <- c(352,  788)
 
 rec_rate <- c(1,2)
 rec_v <- c(1,2)
 setup_r <- c(1,2)
 
 # First, make a matrix of values for the low prior uncertainty case
-
-low_unc <- expand.grid(m, int_t, target_n, rec_rate, rec_v, setup_r)
-low_unc$beta_m <- c(1.79, 2.994)[low_unc[,4]]
-low_unc$beta_s <- c(0.0593, 0.0588)[low_unc[,4]]
-low_unc$v_sh <- c(100, 500)[low_unc[,5]]
-low_unc$v_r <- c(2000, 1667)[low_unc[,5]]
-low_unc$setup_r_a <- c(200, 1800)[low_unc[,6]]
-low_unc$setup_r_b <- c(40, 120)[low_unc[,6]]
+low_unc <- expand.grid(m, t, N, rec_rate, rec_v, setup_r)
+low_unc$mu <- c(1.79, 2.994)[low_unc[,4]]
+low_unc$nu <- c(0.0593, 0.0588)[low_unc[,4]]
+low_unc$rho <- c(100, 500)[low_unc[,5]]
+low_unc$pi <- c(2000, 1667)[low_unc[,5]]
+low_unc$delta <- c(200, 1800)[low_unc[,6]]
+low_unc$epsilon <- c(40, 120)[low_unc[,6]]
 
 low_unc <- low_unc[,c(1:3, 7:12)]
 
 # Similarly for high uncertainty
-
-hi_unc <- expand.grid(m, int_t, target_n, rec_rate, rec_v, setup_r)
-hi_unc$beta_m <- c(1.75, 2.954)[hi_unc[,4]]
-hi_unc$beta_s <- c(0.2890, 0.2889)[hi_unc[,4]]
-hi_unc$v_sh <- c(5, 30)[hi_unc[,5]]
-hi_unc$v_r <- c(100, 100)[hi_unc[,5]]
-hi_unc$setup_r_a <- c(10, 90)[hi_unc[,6]]
-hi_unc$setup_r_b <- c(2, 6)[hi_unc[,6]]
+hi_unc <- expand.grid(m, t, N, rec_rate, rec_v, setup_r)
+hi_unc$mu <- c(1.75, 2.954)[hi_unc[,4]]
+hi_unc$nu <- c(0.2890, 0.2889)[hi_unc[,4]]
+hi_unc$rho <- c(5, 30)[hi_unc[,5]]
+hi_unc$pi <- c(100, 100)[hi_unc[,5]]
+hi_unc$delta <- c(10, 90)[hi_unc[,6]]
+hi_unc$epsilon <- c(2, 6)[hi_unc[,6]]
 
 hi_unc <- hi_unc[,c(1:3, 7:12)]
 
 scenarios <- rbind(low_unc, hi_unc)
 scenarios <- cbind(1:nrow(scenarios), scenarios)
 
-# Replicate each scanrio 10 times to split across HPC
+# Replicate each scenario 10 times to split across HPC
 scenarios <- scenarios[rep(1:nrow(scenarios), each = 10),]
 scenarios$part <- rep(1:10, 128)
 scenarios <- scenarios[, c(1, 11, 2:10)]
-names(scenarios)[1:5] <- c("id", "part", "m", "int_t", "target_n")
+names(scenarios)[1:5] <- c("id", "part", "m", "t", "N")
 
-#write.csv(scenarios, file = paste0("R/scenarios.csv"), row.names = FALSE)
+#write.csv(scenarios, file = paste0("test.csv"), row.names = FALSE)
 ```
 
 Each scenario will have a different expected time to recruit, which we will use to set our feasibility threshold - at 1.2 times this expectation.
@@ -545,8 +550,7 @@ ggplot(res, aes(x = diff)) + stat_density(alpha = 0.4) +
 
 On the face of it, the Bayesian approach is not feasible at the design stage. When it comes to choosing the rule we can argue that doesn't have to be a problem, because we don't need to pre-specify as a Bayesian. But a pre-specified rule can inform the sample size / the timing of the internal pilot analysis, so it would be useful.
 
-We can address this by using the NP regression approach of Strong et al., which fits neatly here. Our methods work has shown that rules based on the standard PC items are very close to the OCs of the Bayesian rules, which tells us that an approximation built around those statistics should be very close too. So we can fit a GAM, getting an expected recruit time as a function of 
-the simulated stats. We can then compare those predictions against the ones made by the full Bayesian method:
+We can address this by using the NP regression approach of Strong et al., which fits neatly here. Our methods work has shown that rules based on the standard PC items are very close to the OCs of the Bayesian rules, which tells us that an approximation built around those statistics should be very close too. So we can fit a GAM, getting an expected recruit time as a function of the simulated stats. We can then compare those predictions against the ones made by the full Bayesian method:
 
 ```{r}
 library(mgcv)
@@ -559,4 +563,3 @@ hist(y)
 ```
 
 This shows us that yes, the predictions from the GAM do tally well with the predictions made by the full Bayesian method. So it should give a good enough approximation for SSD. Doing that is easy - we proceed exactly as before when dealing with Bayesian rules, but now we use the predictions from the GAM rather than the full method.
-
