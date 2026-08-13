@@ -173,36 +173,7 @@ names(scenarios)[1:5] <- c("id", "part", "m", "t", "N")
 #write.csv(scenarios, file = paste0("test.csv"), row.names = FALSE)
 ```
 
-Each scenario will have a different expected time to recruit, which we will use to set our feasibility threshold - at 1.2 times this expectation.
-
-```{r}
-exp_rec_time <- function(sce){
-
-  m <- sce[3]; target_n <- sce[5]
-  beta_m <- sce[6]; beta_s <- sce[7]
-  setup_r_a <- sce[10]; setup_r_b <- sce[11]
-  
-  # Expected rate of recruitment after all sites open
-  final_rate <- exp(beta_m + beta_s^2/2)*m
-  # Expected time until all sites open
-  all_open <- m/(setup_r_a/setup_r_b)
-  # Expected number recruited when all sites open
-  n_0 <- final_rate*all_open/2
-  if(n_0 >= target_n){
-    exp_time <- sqrt(2*target_n*all_open/final_rate)
-  } else {
-    exp_time <- (target_n - (n_0 - final_rate*all_open))/final_rate
-  }
-  return(exp_time)
-}
-
-scenarios$exp_t <- apply(scenarios, 1, exp_rec_time)
-scenarios$thr <- 1.2*scenarios$exp_t
-
-#write.csv(scenarios, file = paste0("R/scenarios.csv"), row.names = FALSE)
-```
-
-Plot the four priors for each of the three parameters - for each, a low and high mean and a low and high uncertainty.
+To help visualise these priors we can plot them - for each of the three parameters we have a low and high mean and a low and high uncertainty:
 
 ```{r}
 N <- 10^5
@@ -213,9 +184,10 @@ df <- data.frame(y = c(exp(rnorm(N, 1.79, 0.0593)),
                  val = rep(c("low", "high"), each = 2*N),
                  unc = rep(rep(c("low", "high"), each = N), 2))
 
-p1 <- ggplot(df, aes(y, fill = val, colour= unc)) + stat_density(alpha = 0.1) +
+p1 <- ggplot(df, aes(y, colour= unc)) + stat_density(alpha = 0) +
   xlim(c(0,30)) + xlab("Expected recruitment rate") + 
-  theme_minimal()
+  theme_minimal()+
+  scale_colour_discrete(name = "Uncertainty")
 ```
 
 ```{r}
@@ -226,9 +198,10 @@ df <- data.frame(y = c(rgamma(N, 100, 2000),
                  val = rep(c("low", "high"), each = 2*N),
                  unc = rep(rep(c("low", "high"), each = N), 2))
 
-p2 <- ggplot(df, aes(y, fill = val, colour= unc)) + stat_density(alpha = 0.1) +
+p2 <- ggplot(df, aes(y, colour= unc)) + stat_density(alpha = 0) +
   xlab("Standard deviation of recruitment rate") + 
-  theme_minimal()
+  theme_minimal()+
+  scale_colour_discrete(name = "Uncertainty")
 ```
 
 ```{r}
@@ -239,14 +212,77 @@ df <- data.frame(y = c(rgamma(N, 200, 40),
                  val = rep(c("low", "high"), each = 2*N),
                  unc = rep(rep(c("low", "high"), each = N), 2))
 
-p3 <- ggplot(df, aes(y, fill = val, colour= unc)) + stat_density(alpha = 0.1) +
+p3 <- ggplot(df, aes(y, colour= unc)) + stat_density(alpha = 0) +
   xlab("Site opening rate") + 
-  theme_minimal()
+  theme_minimal()+
+  scale_colour_discrete(name = "Uncertainty")
 
-p1 / p2 / p3 + plot_layout(guides = 'collect')
+p1 / p2 / p3 + plot_layout(guides = 'collect') 
 
-ggsave("priors.pdf", height=12, width=14, units="cm")
+#ggsave("paper/priors.pdf", height=12, width=14, units="cm")
 ```
+
+
+Each scenario will have a different expected time to recruit, which we can determine from the scenario values. Here we are assuming a simplified model of recruitment where recruitment rate increases linearly over time until we reach the maximum rate (`final_rate`) when all sites have opened (`all_open`); i.e. we will have `n = (final_rate / all_open) t^2 / 2` until time `all_open`, at which point we will have recruited `n_0 = (final_rate / all_open) all_open^2 / 2 = final_rate * all_open / 2` participants, and `n = n_0 + final_rate*(t - all_open)` thereafter:
+
+```{r}
+library(ggplot2)
+final_rate <- 20
+all_open <- 3
+# While recruitment rate is increasing linearly
+t1 <- seq(0, all_open, 0.01)
+n1 <- (final_rate/all_open)*t1^2/2
+# While recruitment rate is constant
+t2 <- seq(all_open, 2*all_open, 0.01)
+n2 <- final_rate*all_open/2 + final_rate*(t2 - all_open)
+
+df <- data.frame(t = c(t1, t2),
+                 n = c(n1, n2))
+
+ggplot(df, aes(t, n)) + geom_line() +
+  geom_vline(xintercept = all_open, linetype = 2) +
+  xlab("Time") + ylab("Number recruited") +
+  theme_minimal()
+```
+
+We therefore get the expected time to recruit the target of `N` depending on which segment of the recruitment curve we hit it:
+
+```{r}
+exp_rec_time <- function(sce){
+
+  m <- sce[3]; N <- sce[5]
+  mu <- sce[6]; nu <- sce[7]
+  delta <- sce[10]; epsilon <- sce[11]
+  
+  # Expected rate of recruitment after all sites open
+  final_rate <- exp(mu + nu^2/2)*m
+  # Expected time until all sites open
+  all_open <- m/(delta/epsilon)
+  # Expected number recruited when all sites open
+  n_0 <- final_rate*all_open/2
+  if(n_0 >= N){
+    # If we hit N before the max rate has been hit
+    exp_time <- sqrt(2*N*all_open/final_rate)
+  } else {
+    exp_time <- all_open + (N - n_0)/final_rate
+  }
+  return(exp_time)
+}
+
+scenarios$exp_t <- apply(scenarios, 1, exp_rec_time)
+```
+
+We then use these expected recruitment times to define the underlying feasibility threshold for each scenario. Here, we classify a trial as truly feasible if its true time to recruit is less than 1.2 times its expected time to recruit:
+
+```{r}
+scenarios$thr <- 1.2*scenarios$exp_t
+#write.csv(scenarios, file = paste0("paper/scenarios.csv"), row.names = FALSE)
+```
+
+
+## HPC
+
+To keep the simulation study managable, we run it on HPC. Our `scenarios.csv` file has replicated each scenario ten times to help us batch the overall study into small chunks.
 
 ## Analysis
 

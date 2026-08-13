@@ -1,11 +1,6 @@
 #setwd("C:/Users/meddwilb/OneDrive - University of Leeds/Documents/Research/Projects/fahb/R")
 library(brms)
-library(posterior)
-library(extraDistr)
-
-source("generate_data.R")
-source("PC_analysis.R")
-source("Bayes_analysis.R")
+library(fahb)
 
 input_arg <- as.numeric(commandArgs(TRUE))
 
@@ -23,11 +18,18 @@ sce <- as.numeric(scenarios[task_id,])
 
 scenario_id <- sce[1]; part <- sce[2]
 
-m <- sce[3]; int_t <- sce[4]; target_n <- sce[5]
-beta_m <- sce[6]; beta_s <- sce[7]
-v_sh <- sce[8]; v_r <- sce[9]
-setup_r_a <- sce[10]; setup_r_b <- sce[11]
-int_t <- int_t*sce[12]
+m <- sce[3]; t <- sce[4]; N <- sce[5]
+mu <- sce[6]; nu <- sce[7]
+rho <- sce[8]; pi <- sce[9]
+delta <- sce[10]; epsilon <- sce[11]
+t <- t*sce[12]
+
+problem <- fahb_problem(N = N, m = m, t = t, rel_thr = 1.2, 
+                        so_hps = c(delta, epsilon), 
+                        mean_rr_hps = c(mu, nu), 
+                        sd_rr_hps = c(rho, pi))
+
+problem <- forecast(problem)
 
 int_data <- generate_data(m=20, int_t=3, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=5, v_r=100, setup_r_a=10, setup_r_b=1)[[1]]
 
