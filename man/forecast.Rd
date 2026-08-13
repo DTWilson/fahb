@@ -4,7 +4,7 @@
 \alias{forecast}
 \title{Generate probabilistic forecasts of trial recruitment}
 \usage{
-forecast(problem, n_sims = 10^4, overwrite = FALSE)
+forecast(problem, n_sims = 10^4, overwrite = FALSE, data_sum = FALSE)
 }
 \arguments{
 \item{problem}{an object of class \code{fahb_problem}.}
