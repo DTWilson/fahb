@@ -29,7 +29,14 @@ problem <- fahb_problem(N = N, m = m, t = t, rel_thr = 1.2,
                         mean_rr_hps = c(mu, nu), 
                         sd_rr_hps = c(rho, pi))
 
-problem <- forecast(problem)
+problem <- forecast(problem, data_sum = TRUE)
+
+ts <- problem$sims[1,5:(4+m)]
+ns <- problem$sims[1,(5+m):(4+2*m)]
+ts <- as.numeric(ts[ts != 0])
+ns <- as.numeric(ns[ts != 0])
+
+analysis <- fahb_analysis(ns, ts, problem)
 
 int_data <- generate_data(m=20, int_t=3, target_n=300, beta_m=1.75, beta_s=0.3, v_sh=5, v_r=100, setup_r_a=10, setup_r_b=1)[[1]]
 

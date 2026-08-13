@@ -222,7 +222,6 @@ p1 / p2 / p3 + plot_layout(guides = 'collect')
 #ggsave("paper/priors.pdf", height=12, width=14, units="cm")
 ```
 
-
 Each scenario will have a different expected time to recruit, which we can determine from the scenario values. Here we are assuming a simplified model of recruitment where recruitment rate increases linearly over time until we reach the maximum rate (`final_rate`) when all sites have opened (`all_open`); i.e. we will have `n = (final_rate / all_open) t^2 / 2` until time `all_open`, at which point we will have recruited `n_0 = (final_rate / all_open) all_open^2 / 2 = final_rate * all_open / 2` participants, and `n = n_0 + final_rate*(t - all_open)` thereafter:
 
 ```{r}
@@ -278,7 +277,6 @@ We then use these expected recruitment times to define the underlying feasibilit
 scenarios$thr <- 1.2*scenarios$exp_t
 #write.csv(scenarios, file = paste0("paper/scenarios.csv"), row.names = FALSE)
 ```
-
 
 ## HPC
 
