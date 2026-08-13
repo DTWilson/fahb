@@ -5,7 +5,7 @@ Generate probabilistic forecasts of trial recruitment
 ## Usage
 
 ``` r
-forecast(problem, n_sims = 10^4, overwrite = FALSE)
+forecast(problem, n_sims = 10^4, overwrite = FALSE, data_sum = FALSE)
 ```
 
 ## Arguments
